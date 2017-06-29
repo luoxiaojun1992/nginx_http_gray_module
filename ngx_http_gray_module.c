@@ -156,5 +156,5 @@ ngx_http_gray(ngx_conf_t *cf,ngx_command_t*cmd,void *conf)
 static ngx_int_t
 ngx_http_gray_handler(ngx_http_request_t * r)
 {
-
+  
 }
