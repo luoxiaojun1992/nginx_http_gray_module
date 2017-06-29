@@ -2,14 +2,6 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-/**
- *  定义模块配置结构   命名规则为ngx_http_[module-name]_[main|srv|loc]_conf_t。其中main、srv和loc分别用于表示同一模块在三层block中的配置信息。
- */
-typedef struct {
-    int variable_index;
-    ngx_str_t variable;
-} ngx_http_gray_loc_conf_t;
-
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
 
@@ -23,8 +15,6 @@ ngx_http_gray_handler(ngx_http_request_t *r);
 static char*
 ngx_http_gray(ngx_conf_t *cf ,ngx_command_t *cmd ,void *conf);
 
-static void *ngx_http_gray_create_loc_conf(ngx_conf_t *cf);
-static char *ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
 static ngx_int_t ngx_http_gray_init(ngx_conf_t *cf);
 
 /*模块 commands*/
@@ -52,8 +42,8 @@ static ngx_http_module_t ngx_http_gray_module_ctx=
     NULL,   /* init main configuration */
     NULL,   /* create server configuration */
     NULL,   /* merge server configuration */
-    ngx_http_gray_create_loc_conf,   /* create location configuration */
-    ngx_http_gray_merge_loc_conf    /* merge location configuration */
+    NULL,   /* create location configuration */
+    NULL    /* merge location configuration */
 };
 
 /*nginx 模块*/
@@ -72,42 +62,6 @@ ngx_module_t  ngx_http_gray_module =
     NULL,                                  /* exit master */
     NGX_MODULE_V1_PADDING
 };
-
-
-/**
- * 初始化一个配置结构体
- * @param cf
- * @return
- */
-static void *
-ngx_http_gray_create_loc_conf(ngx_conf_t *cf)
-{
-        ngx_http_gray_loc_conf_t *conf;
-        conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_gray_loc_conf_t)); //gx_pcalloc用于在Nginx内存池中分配一块空间，是pcalloc的一个包装
-        if(conf == NULL) {
-                return NGX_CONF_ERROR;
-        }
-        conf->ed.len = 0;
-        conf->ed.data = NULL;
-        return conf;
-}
-/**
- * 将其父block的配置信息合并到此结构体 实现了配置的继承
- * @param cf
- * @param parent
- * @param child
- * @return ngx status code
- *
- * ngx_conf_merge_str_value不是一个函数，而是一个宏，其定义在https://github.com/nginx/nginx/blob/master/src/core/ngx_conf_file.h#L205中
- */
-static char *
-ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
-{
-    ngx_http_gray_loc_conf_t *prev = parent;
-    ngx_http_gray_loc_conf_t *conf = child;
-    ngx_conf_merge_str_value(conf->ed, prev->ed, '"');
-    return NGX_CONF_OK;
-}
 
 /**
  * init gray模块
