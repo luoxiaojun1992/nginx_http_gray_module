@@ -117,9 +117,15 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-  *v = ngx_http_variable_true_value;
+	if (rand() % 10 < 5) {
 
-  // *v = ngx_http_variable_null_value;
+  	*v = ngx_http_variable_true_value;
+
+	} else {
+
+  	*v = ngx_http_variable_null_value;
+
+	}
 
   return NGX_OK;
 }
