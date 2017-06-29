@@ -131,6 +131,18 @@ ngx_http_gray(ngx_conf_t *cf,ngx_command_t*cmd,void *conf)
       return NGX_CONF_ERROR;
     }
 
+    if (value[1].data[0] == '$') {
+      value[1].len--;
+      value[1].data++;
+      mycf->variable_index = ngx_http_get_variable_index(cf, &value[1])
+      if (mycf->variable_index == NGX_ERROR) {
+        return NGX_CONF_ERROR;
+      }
+      mycf->variable = value[1];
+    } else {
+      return NGX_CONF_ERROR;
+    }
+
     /*找到gray配置项所属的配置块*/
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
 
