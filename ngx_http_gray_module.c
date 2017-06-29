@@ -115,7 +115,7 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
     return NGX_OK;
 }
 
-static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_t *v, ngx_uint_t data)
+static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
   *v = ngx_http_variable_true_value;
 
