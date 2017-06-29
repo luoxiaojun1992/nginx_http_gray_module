@@ -11,6 +11,10 @@ typedef struct {
 } ngx_http_gray_loc_conf_t;
 
 
+static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
+
+static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf);
+
 /*在ngx_http_gray中设置的回调，启动subrequest子请求*/
 static ngx_int_t
 ngx_http_gray_handler(ngx_http_request_t *r);
@@ -42,7 +46,7 @@ static ngx_command_t  ngx_http_gray_commands[] =
 /*http模块上下文*/
 static ngx_http_module_t ngx_http_gray_module_ctx=
 {
-    NULL,   /* preconfiguration */
+    ngx_http_gray_add_variable,   /* preconfiguration */
     ngx_http_gray_init,   /* postconfiguration */
     NULL,   /* create main configuration */
     NULL,   /* init main configuration */
@@ -123,25 +127,6 @@ ngx_http_gray(ngx_conf_t *cf,ngx_command_t*cmd,void *conf)
 {
 
     ngx_http_core_loc_conf_t  *clcf;
-    ngx_str_t                 *value;
-    ngx_http_gray_loc_conf_t  *mycf = conf;
-
-    value = cf->args->elts;
-    if (cf->args->nelts != 2) {
-      return NGX_CONF_ERROR;
-    }
-
-    if (value[1].data[0] == '$') {
-      value[1].len--;
-      value[1].data++;
-      mycf->variable_index = ngx_http_get_variable_index(cf, &value[1])
-      if (mycf->variable_index == NGX_ERROR) {
-        return NGX_CONF_ERROR;
-      }
-      mycf->variable = value[1];
-    } else {
-      return NGX_CONF_ERROR;
-    }
 
     /*找到gray配置项所属的配置块*/
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
@@ -156,5 +141,27 @@ ngx_http_gray(ngx_conf_t *cf,ngx_command_t*cmd,void *conf)
 static ngx_int_t
 ngx_http_gray_handler(ngx_http_request_t * r)
 {
-  
+  return NGX_OK;
+}
+
+static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
+{
+    ngx_http_variable_t      *v;
+    v = ngx_http_gray_add_variable(cf, &new_variable_is_gray, NGX_HTTP_VAR_CHANGEABLE);
+
+    if (v == NULL) {
+      return NGX_ERROR;
+    }
+
+    v->get_handler = ngx_http_isgray_variable;
+    v->data = 0;
+
+    return NGX_OK;
+}
+
+static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_t *v, ngx_uint_t data)
+{
+  *v = ngx_http_variable_true_value;
+
+  return NGX_OK;
 }
