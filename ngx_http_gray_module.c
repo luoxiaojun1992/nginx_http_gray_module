@@ -4,6 +4,7 @@
 
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
+static ngx_str_t new_variable_is_not_gray = ngx_string("is_not_gray");
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf);
 
@@ -19,13 +20,15 @@ static ngx_int_t ngx_http_gray_init(ngx_conf_t *cf);
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
+static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
+
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
 {
 
     {
         ngx_string("gray"),
-        NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
+        NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_NOARGS,
         ngx_http_gray,
         NGX_HTTP_LOC_CONF_OFFSET,
         0,
@@ -102,15 +105,25 @@ ngx_http_gray_handler(ngx_http_request_t * r)
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 {
-    ngx_http_variable_t      *v;
-    v = ngx_http_add_variable(cf, &new_variable_is_gray, NGX_HTTP_VAR_CHANGEABLE);
+    ngx_http_variable_t      *v1;
+    v1 = ngx_http_add_variable(cf, &new_variable_is_gray, NGX_HTTP_VAR_CHANGEABLE);
 
-    if (v == NULL) {
+    if (v1 == NULL) {
       return NGX_ERROR;
     }
 
-    v->get_handler = ngx_http_isgray_variable;
-    v->data = 0;
+    v1->get_handler = ngx_http_isgray_variable;
+    v1->data = 0;
+
+		ngx_http_variable_t      *v2;
+    v2 = ngx_http_add_variable(cf, &new_variable_is_not_gray, NGX_HTTP_VAR_CHANGEABLE);
+
+    if (v2 == NULL) {
+      return NGX_ERROR;
+    }
+
+    v2->get_handler = ngx_http_isnotgray_variable;
+    v2->data = 0;
 
     return NGX_OK;
 }
@@ -123,7 +136,22 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 	} else {
 
-  	*v = ngx_http_variable_null_value;
+		*v = ngx_http_variable_null_value;
+
+	}
+
+  return NGX_OK;
+}
+
+static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
+{
+	if (rand() % 2 != 0) {
+
+  	*v = ngx_http_variable_true_value;
+
+	} else {
+
+		*v = ngx_http_variable_null_value;
 
 	}
 
