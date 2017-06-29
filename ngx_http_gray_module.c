@@ -106,8 +106,6 @@ ngx_http_gray_handler(ngx_http_request_t * r)
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 {
-		randNum = rand();
-
     ngx_http_variable_t      *v1;
     v1 = ngx_http_add_variable(cf, &new_variable_is_gray, NGX_HTTP_VAR_CHANGEABLE);
 
@@ -133,7 +131,9 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-	if (randNum % 2 == 0) {
+	if (rand() % 2 == 0) {
+
+		randNum = 1;
 
   	*v = ngx_http_variable_true_value;
 
@@ -148,7 +148,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-	if (randNum % 2 != 0) {
+	if (randNum == 0) {
 
   	*v = ngx_http_variable_true_value;
 
