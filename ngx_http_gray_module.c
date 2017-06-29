@@ -101,7 +101,7 @@ ngx_http_gray_handler(ngx_http_request_t * r)
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 {
     ngx_http_variable_t      *v;
-    v = ngx_http_gray_add_variable(cf, &new_variable_is_gray, NGX_HTTP_VAR_CHANGEABLE);
+    v = ngx_http_add_variable(cf, &new_variable_is_gray, NGX_HTTP_VAR_CHANGEABLE);
 
     if (v == NULL) {
       return NGX_ERROR;
