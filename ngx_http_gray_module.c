@@ -2,7 +2,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-int randNum = 0;
+int isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
 static ngx_str_t new_variable_is_not_gray = ngx_string("is_not_gray");
@@ -132,14 +132,16 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
 	if (rand() % 2 == 0) {
+		isGray = 1;
+	} else {
+		isGray = 0;
+	}
 
-		randNum = 1;
+	if (isGray) {
 
   	*v = ngx_http_variable_true_value;
 
 	} else {
-
-		randNum = 0;
 
 		*v = ngx_http_variable_null_value;
 
@@ -150,7 +152,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-	if (randNum == 0) {
+	if (!isGray) {
 
   	*v = ngx_http_variable_true_value;
 
