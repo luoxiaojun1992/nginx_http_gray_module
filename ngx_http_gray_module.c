@@ -119,7 +119,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 {
   // *v = ngx_http_variable_true_value;
 
-  *v = 0;
+  *v = ngx_http_variable_null_value;
 
   return NGX_OK;
 }
