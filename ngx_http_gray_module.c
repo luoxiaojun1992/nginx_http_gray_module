@@ -139,6 +139,8 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 	} else {
 
+		randNum = 0;
+
 		*v = ngx_http_variable_null_value;
 
 	}
