@@ -77,8 +77,6 @@ ngx_module_t  ngx_http_gray_module =
 static ngx_int_t
 ngx_http_gray_init(ngx_conf_t *cf)
 {
-		randNum = rand();
-
     return NGX_OK;
 }
 
@@ -108,6 +106,8 @@ ngx_http_gray_handler(ngx_http_request_t * r)
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 {
+		randNum = rand();
+
     ngx_http_variable_t      *v1;
     v1 = ngx_http_add_variable(cf, &new_variable_is_gray, NGX_HTTP_VAR_CHANGEABLE);
 
