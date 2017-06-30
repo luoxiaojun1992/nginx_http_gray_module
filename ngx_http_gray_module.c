@@ -132,6 +132,22 @@ static char *ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *ch
   return NGX_CONF_OK;
 }
 
+static ngx_int_t gray_upstream_create_request(ngx_http_request_t *r)
+{
+  //HTTP请求头
+  static ngx_str_t backendQueryLine = ngx_string("GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+
+  ngx_int_t queryLineLen = backendQueryLine.len;
+
+  ngx_buf_t* b = ngx_create_temp_buf(r->pool, queryLineLen);
+
+  if (b == NULL) {
+    return NGX_ERROR;
+  }
+
+  b->last = b->pos + queryLineLen;
+}
+
 /**
  * init gray模块
  * @param cf
