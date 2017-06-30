@@ -47,6 +47,19 @@ static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r);
 static void gray_upstream_finalize_request(ngx_http_request_t *r, ngx_int_t rc);
 
 
+static ngx_str_t  ngx_http_proxy_hide_headers[] =
+{
+    ngx_string("Date"),
+    ngx_string("Server"),
+    ngx_string("X-Pad"),
+    ngx_string("X-Accel-Expires"),
+    ngx_string("X-Accel-Redirect"),
+    ngx_string("X-Accel-Limit-Rate"),
+    ngx_string("X-Accel-Buffering"),
+    ngx_string("X-Accel-Charset"),
+    ngx_null_string
+};
+
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
