@@ -199,7 +199,7 @@ int httpRequest()
         servaddr.sin_family = AF_INET;
         servaddr.sin_port = htons(PORT);
 				struct hostent* hostInfo = gethostbyname(DEST_IP_BY_NAME);
-				memcpy(&addr_serv.sin_addr, &(*hostInfo->h_addr_list[0]), hostInfo->h_length);
+				memcpy(&servaddr.sin_addr, &(*hostInfo->h_addr_list[0]), hostInfo->h_length);
 
         if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0){
                 //
