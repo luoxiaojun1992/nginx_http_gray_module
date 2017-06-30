@@ -2,7 +2,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-#include <stdlib.h>
+#include <hiredis.h>
 
 ngx_uint_t isGray = 0;
 
@@ -27,7 +27,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
-void executeCMD(const char *cmd, char *result);
+char * getGrayPolicy();
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
@@ -162,4 +162,33 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 	}
 
   return NGX_OK;
+}
+
+char * getGrayPolicy()
+{
+	unsigned int j;
+  redisContext *c;
+  redisReply *reply;
+  const char *hostname = (argc > 1) ? argv[1] : "127.0.0.1";
+  int port = (argc > 2) ? atoi(argv[2]) : 6379;
+
+  struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+  c = redisConnectWithTimeout(hostname, port, timeout);
+  if (c == NULL || c->err) {
+      if (c) {
+          redisFree(c);
+      }
+  }
+
+	char * grayPolicy = "";
+
+  /* Try a GET and two INCR */
+  reply = redisCommand(c,"GET foo");
+  grayPolicy = reply->str;
+  freeReplyObject(reply);
+
+  /* Disconnects and frees the context */
+  redisFree(c);
+
+  return grayPolicy;
 }
