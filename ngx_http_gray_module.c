@@ -146,6 +146,8 @@ static ngx_int_t gray_upstream_create_request(ngx_http_request_t *r)
   }
 
   b->last = b->pos + queryLineLen;
+
+  //todo
 }
 
 /**
