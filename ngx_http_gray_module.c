@@ -327,7 +327,6 @@ ngx_http_gray_init(ngx_conf_t *cf)
 static char*
 ngx_http_gray(ngx_conf_t *cf,ngx_command_t*cmd,void *conf)
 {
-
     ngx_http_core_loc_conf_t  *clcf;
 
     /*找到gray配置项所属的配置块*/
@@ -397,13 +396,9 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 	}
 
 	if (isGray) {
-
   	*v = ngx_http_variable_true_value;
-
 	} else {
-
 		*v = ngx_http_variable_null_value;
-
 	}
 
   return NGX_OK;
@@ -412,13 +407,9 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
 	if (!isGray) {
-
   	*v = ngx_http_variable_true_value;
-
 	} else {
-
 		*v = ngx_http_variable_null_value;
-
 	}
 
   return NGX_OK;
