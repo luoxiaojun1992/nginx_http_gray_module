@@ -25,6 +25,10 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
+int callback(void *data, size_t size, size_t nmemb, void *stream);
+
+int httpRequest(ngx_str_t gateway);
+
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
 {
@@ -176,7 +180,7 @@ int callback(void *data, size_t size, size_t nmemb, void *stream)
     char *buffer = calloc(1, bufferSize);
 
     memcpy(buffer, data, size*nmemb);
-    res = sprintf("%s", *buffer)
+    res = sprintf("%s", buffer)
     free(buffer);
 
     return size*nmemb;
