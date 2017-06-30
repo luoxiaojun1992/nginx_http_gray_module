@@ -357,6 +357,16 @@ ngx_http_gray_handler(ngx_http_request_t * r)
   }
 
   ngx_http_gray_conf_t *mycf = (ngx_http_gray_conf_t *) ngx_http_get_module_loc_conf(r, ngx_http_gray_module);
+
+  ngx_http_upstream_t *u = r->upstream;
+  u->conf = &mycf->upstream;
+  u->buffering = mycf->upstream.buffering;
+  u->resolved = (ngx_http_upstream_resolved_t*) ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_resolved_t));
+  if (u->resolved == NULL) {
+    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "ngx_pcalloc resolved error. %s.", strerror(errno));
+    return NGX_ERROR;
+  }
+
   //todo
 
   return NGX_OK;
