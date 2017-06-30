@@ -42,6 +42,8 @@ static ngx_int_t gray_upstream_create_request(ngx_http_request_t *r);
 
 static ngx_int_t gray_process_status_line(ngx_http_request_t *r);
 
+static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r);
+
 
 
 /*模块 commands*/
@@ -246,6 +248,23 @@ static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r)
       ngx_memcpy(h->key.data, r->header_name_start, h->key.len);
       h->key.data[h->ken.len] = '\0';
       ngx_memcpy(h->value.data, r->header_start, h->value.len);
+      h->value.data[h->value.len] = '\0';
+      if (h->ken.len == r->lowcase_index) {
+        ngx_memcpy(h->lowcase_key, r->lowcase_header, h->key.len);
+      } else {
+        ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
+      }
+
+      hh = ngx_hash_find(&umcf->headers_in_hash, h->hash, h->lowcase_key, h->key.len);
+
+      if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
+        return NGX_ERROR;
+      }
+
+      continue;
+    }
+
+    if (rc == NGX_HTTP_PARSE_HEADER_DONE) {
       //todo
     }
   }
