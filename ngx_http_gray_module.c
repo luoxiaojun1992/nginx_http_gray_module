@@ -27,7 +27,7 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 int callback(void *data, size_t size, size_t nmemb, void *stream);
 
-int httpRequest(ngx_str_t gateway);
+int httpRequest(char *gateway);
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
