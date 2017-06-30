@@ -166,7 +166,6 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 char * getGrayPolicy()
 {
-	unsigned int j;
   redisContext *c;
   redisReply *reply;
   const char *hostname = "127.0.0.1";
