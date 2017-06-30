@@ -186,7 +186,7 @@ int callback(void *data, size_t size, size_t nmemb, void *stream)
     return size*nmemb;
 }
 
-int httpRequest(ngx_str_t gateway)
+int httpRequest(char *gateway)
 {
     int ret = 0;
     CURL *curl = NULL;
