@@ -2,7 +2,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-#include "/usr/local/include/hiredis"
+#include "/usr/local/include/hiredis/hiredis.h"
 
 ngx_uint_t isGray = 0;
 
@@ -26,14 +26,6 @@ static ngx_int_t ngx_http_gray_init(ngx_conf_t *cf);
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
-
-redisContext *redisConnectWithTimeout(const char *ip, int port, const struct timeval tv);
-
-void redisFree(redisContext *c);
-
-void *redisCommand(redisContext *c, const char *format, ...);
-
-void freeReplyObject(void *reply);
 
 char * getGrayPolicy();
 
