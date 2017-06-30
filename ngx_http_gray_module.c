@@ -2,6 +2,8 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+#include "credis.h"
+
 ngx_uint_t isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
