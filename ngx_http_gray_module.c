@@ -89,7 +89,7 @@ gray_subrequest_post_handler(ngx_http_request_t*r,void*data,ngx_int_t rc)
     /*访问服务器成功，开始解析包体*/
     if(NGX_HTTP_OK == r->headers_out.status)
     {
-        char[] res;
+        char res[];
         ngx_buf_t* pRecvBuf = &r->upstream->buffer;
         /*内容解析到stock数组中*/
         for (; pRecvBuf->pos != pRecvBuf->last; pRecvBuf->pos++)
