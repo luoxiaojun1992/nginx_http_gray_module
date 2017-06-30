@@ -131,7 +131,7 @@ static char *ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *ch
 
   hash.max_size = 100;
   hash.bucket_size = 1024;
-  hash.name = 'proxy_headers_hash';
+  hash.name = "proxy_headers_hash";
 
   if (ngx_http_upstream_hide_headers_hash(cf, &conf->upstream, &prev->upstream, ngx_http_proxy_hide_headers, &hash) != NGX_OK) {
     return NGX_CONF_ERROR;
