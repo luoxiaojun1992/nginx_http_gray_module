@@ -44,6 +44,8 @@ static ngx_int_t gray_process_status_line(ngx_http_request_t *r);
 
 static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r);
 
+static void gray_upstream_finalize_request(ngx_http_request_t *r, ngx_int_t rc);
+
 
 
 /*模块 commands*/
@@ -71,8 +73,8 @@ static ngx_http_module_t ngx_http_gray_module_ctx=
     NULL,   /* init main configuration */
     NULL,   /* create server configuration */
     NULL,   /* merge server configuration */
-    NULL,   /* create location configuration */
-    NULL    /* merge location configuration */
+    ngx_http_gray_create_loc_conf,   /* create location configuration */
+    ngx_http_gray_merge_loc_conf    /* merge location configuration */
 };
 
 /*nginx 模块*/
