@@ -399,6 +399,7 @@ ngx_http_gray_handler(ngx_http_request_t * r)
   u->resolved->sockaddr = (struct sockaddr*)&backendSockAddr;
   u->resolved->socklen = sizeof(struct sockaddr_in);
   u->resolved->naddrs = 1;
+  u->resolved->port = htons((in_port_t)80);
 
   u->create_request = gray_upstream_create_request;
   u->process_header = gray_process_status_line;
