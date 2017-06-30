@@ -91,87 +91,17 @@ gray_subrequest_post_handler(ngx_http_request_t*r,void*data,ngx_int_t rc)
     {
         int flag = 0;
 
+        char *res = "";
         ngx_buf_t* pRecvBuf = &r->upstream->buffer;
         /*内容解析到stock数组中*/
         for (; pRecvBuf->pos != pRecvBuf->last; pRecvBuf->pos++)
         {
-            if (*pRecvBuf->pos == ',' || *pRecvBuf->pos == '\"')
-            {
-                if (flag > 0)
-                {
-                    myctx->stock[flag - 1].len = pRecvBuf->pos - myctx->stock[flag - 1].data;
-                }
-                flag++;
-                myctx->stock[flag - 1].data = pRecvBuf->pos + 1;
-            }
-            if (flag > 6)
-                break;
+          res += *pRecvBuf;
         }
-
     }
-    /*设置父请求的回调方法*/
-    pr->write_event_handler = gray_post_handler;
 
     return NGX_OK;
 
-}
-
-/*激活父请求回调*/
-static void
-gray_post_handler(ngx_http_request_t * r)
-{
-
-    /*如果没有返回200则直接把错误码发回用户*/
-    if (r->headers_out.status != NGX_HTTP_OK)
-    {
-    ngx_http_finalize_request(r, r->headers_out.status);
-        return;
-    }
-
-
-    /*当前请求是父请求*/
-    ngx_http_gray_ctx_t* myctx = ngx_http_get_module_ctx(r, ngx_http_gray_module);
-
-
-    /*发送给客户端的包体内容*/
-
-    ngx_str_t output_format = ngx_string("stock[%V],Today current price: %V, volumn: %V");
-
-    /*计算待发送包体的长度*/
-    /*-6减去占位符*/
-    int bodylen = output_format.len + myctx->stock[0].len
-                  + myctx->stock[1].len + myctx->stock[4].len - 6;
-
-    r->headers_out.content_length_n = bodylen;
-
-    /*内存池上分配内存保存将要发送的包体*/
-    ngx_buf_t* b = ngx_create_temp_buf(r->pool, bodylen);
-    ngx_snprintf(b->pos, bodylen, (char*)output_format.data,
-                 &myctx->stock[0], &myctx->stock[1], &myctx->stock[4]);
-
-
-    b->last = b->pos + bodylen;
-    b->last_buf = 1;
-
-    ngx_chain_t out;
-    out.buf = b;
-    out.next = NULL;
-
-    /*设置Content-Type，汉子编码是GBK*/
-    static ngx_str_t type = ngx_string("text/plain; charset=GBK");
-
-    r->headers_out.content_type = type;
-    r->headers_out.status = NGX_HTTP_OK;
-
-    r->connection->buffered |= NGX_HTTP_WRITE_BUFFERED;
-
-    /*发送http头部;包括响应行*/
-    ngx_int_t ret = ngx_http_send_header(r);
-    /*发送http包体*/
-    ret = ngx_http_output_filter(r, &out);
-
-    /*需要手动调用*/
-    ngx_http_finalize_request(r,ret);
 }
 
 /**
@@ -205,18 +135,18 @@ static ngx_int_t
 ngx_http_gray_handler(ngx_http_request_t * r)
 {
   /*创建上下文*/
-    ngx_http_mytest_ctx_t* myctx = ngx_http_get_module_ctx(r, ngx_http_mytest_module);
+    ngx_http_gray_ctx_t* myctx = ngx_http_get_module_ctx(r, ngx_http_gray_module);
 
     if(NULL == myctx)
     {
-        myctx = ngx_palloc(r->pool,sizeof(ngx_http_mytest_ctx_t));
+        myctx = ngx_palloc(r->pool,sizeof(ngx_http_gray_ctx_t));
         if (myctx == NULL)
         {
             return NGX_ERROR;
         }
 
         /*将上下文设置到原始请求r中*/
-        ngx_http_set_ctx(r, myctx, ngx_http_mytest_module);
+        ngx_http_set_ctx(r, myctx, ngx_http_gray_module);
     }
 
     /*子请求的回调方法将在此结构体中设置*/
