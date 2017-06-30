@@ -346,10 +346,6 @@ ngx_http_gray_upstream_input_filter(void *data, ssize_t bytes)
       //
     }
 
-    if (1) {
-      isGray = 1;
-    }
-
     return NGX_OK;
 }
 
