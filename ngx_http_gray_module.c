@@ -342,8 +342,6 @@ ngx_http_gray_upstream_input_filter(void *data, ssize_t bytes)
     u = ctx->request->upstream;
     b = &u->buffer;
 
-    fprintf(stderr, "debug:%s", b->pos);
-
     return NGX_OK;
 }
 
@@ -425,7 +423,6 @@ ngx_http_gray_handler(ngx_http_request_t * r)
   u->process_header = gray_process_status_line;
   u->finalize_request = gray_upstream_finalize_request;
   u->input_filter = ngx_http_gray_upstream_input_filter;
-  fprintf(stderr, "debug");
 
   r->main->count++;
   ngx_http_upstream_init(r);
