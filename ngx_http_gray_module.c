@@ -6,10 +6,17 @@ typedef struct {
   ngx_http_upstream_conf_t upstream;
 } ngx_http_gray_conf_t;
 
+//请求上下文
+typedef struct {
+  ngx_http_status_t  status;
+} ngx_http_gray_ctx_t;
+
 ngx_uint_t isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
 static ngx_str_t new_variable_is_not_gray = ngx_string("is_not_gray");
+
+
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf);
 
@@ -28,6 +35,10 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
 static void* ngx_http_gray_create_loc_conf(ngx_conf_t *cf);
+
+static char *ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
+
+
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
@@ -75,6 +86,9 @@ ngx_module_t  ngx_http_gray_module =
     NGX_MODULE_V1_PADDING
 };
 
+
+
+
 static void* ngx_http_gray_create_loc_conf(ngx_conf_t *cf)
 {
   ngx_http_gray_conf_t *mycf;
@@ -97,6 +111,25 @@ static void* ngx_http_gray_create_loc_conf(ngx_conf_t *cf)
   mycf->upstream.hide_headers = NGX_CONF_UNSET_PTR;
   mycf->upstream.pass_headers = NGX_CONF_UNSET_PTR;
   return mycf;
+}
+
+static char *ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
+{
+  ngx_http_gray_conf_t *prev = (ngx_http_gray_conf_t *)parent;
+
+  ngx_http_gray_conf_t *conf = (ngx_http_gray_conf_t *)child;
+
+  ngx_hash_init_t          hash;
+
+  hash.max_size = 100;
+  hash.bucket_size = 1024;
+  hash.name = 'proxy_headers_hash';
+
+  if (ngx_http_upstream_hide_headers_hash(cf, &conf->upstream, &prev->upstream, ngx_http_proxy_hide_headers, &hash) != NGX_OK) {
+    return NGX_CONF_ERROR;
+  }
+
+  return NGX_CONF_OK;
 }
 
 /**
