@@ -47,6 +47,9 @@ static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r);
 
 static void gray_upstream_finalize_request(ngx_http_request_t *r, ngx_int_t rc);
 
+static ngx_int_t
+ngx_http_gray_upstream_input_filter(void *data, ssize_t bytes);
+
 
 static ngx_str_t  ngx_http_proxy_hide_headers[] =
 {
@@ -327,6 +330,24 @@ static void gray_upstream_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
   ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0, "gray_upstream_finalize_request");
 }
 
+static ngx_int_t
+ngx_http_gray_upstream_input_filter(void *data, ssize_t bytes)
+{
+    ngx_http_enhanced_memcached_ctx_t  *ctx = data;
+
+    ngx_buf_t            *b;
+    ngx_http_upstream_t  *u;
+
+    u = ctx->request->upstream;
+    b = &u->buffer;
+
+    if (b) {
+      //
+    }
+
+    return NGX_OK;
+}
+
 /**
  * init gray模块
  * @param cf
@@ -404,6 +425,8 @@ ngx_http_gray_handler(ngx_http_request_t * r)
   u->create_request = gray_upstream_create_request;
   u->process_header = gray_process_status_line;
   u->finalize_request = gray_upstream_finalize_request;
+  u->input_filter = ngx_http_gray_upstream_input_filter;
+
   r->main->count++;
   ngx_http_upstream_init(r);
 
