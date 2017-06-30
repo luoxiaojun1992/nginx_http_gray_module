@@ -306,6 +306,11 @@ static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r)
   }
 }
 
+static void gray_upstream_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
+{
+  ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0, "gray_upstream_finalize_request");
+}
+
 /**
  * init gray模块
  * @param cf
@@ -338,6 +343,23 @@ ngx_http_gray(ngx_conf_t *cf,ngx_command_t*cmd,void *conf)
 static ngx_int_t
 ngx_http_gray_handler(ngx_http_request_t * r)
 {
+  ngx_http_gray_ctx_t* myctx = ngx_http_get_module_ctx(r, ngx_http_gray_module);
+  if (myctx == NULL) {
+    myctx = ngx_palloc(r->pool, sizeof(ngx_http_gray_ctx_t));
+    if (myctx == NULL) {
+      return NGX_ERROR;
+    }
+    ngx_http_set_ctx(r, myctx, ngx_http_gray_module);
+  }
+
+  if (ngx_http_upstream_create(r) != NGX_OK) {
+    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "ngx_http_upstream_create() failed");
+    return NGX_ERROR;
+  }
+
+  ngx_http_gray_conf_t *mycf = (ngx_http_gray_conf_t *) ngx_http_get_module_loc_conf(r, ngx_http_gray_module);
+  //todo
+
   return NGX_OK;
 }
 
