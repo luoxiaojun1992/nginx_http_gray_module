@@ -156,7 +156,7 @@ ngx_http_gray_handler(ngx_http_request_t * r)
     }
 
     /*设置子请求处理完毕时回调方法为mytest_subrequest_post_handler*/
-    psr->handler = mytest_subrequest_post_handler;
+    psr->handler = gray_subrequest_post_handler;
     /*回调函数的data参数*/
     psr->data = myctx;
 
