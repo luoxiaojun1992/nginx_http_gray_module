@@ -2,6 +2,8 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+#include <curl/curl.h>
+
 int isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
@@ -131,6 +133,8 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
+  httpRequest("http://127.0.0.1");
+
 	if (rand() % 2 == 0) {
 		isGray = 1;
 	} else {
@@ -163,4 +167,34 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 	}
 
   return NGX_OK;
+}
+
+int callback(void *data, size_t size, size_t nmemb, void *stream)
+{
+    ngx_str_t res;
+    size_t bufferSize = nmemb*size + 8;
+    char *buffer = calloc(1, bufferSize);
+
+    memcpy(buffer, data, size*nmemb);
+    res = sprintf("%s", *buffer)
+    free(buffer);
+
+    return size*nmemb;
+}
+
+int httpRequest(ngx_str_t gateway)
+{
+    int ret = 0;
+    CURL *curl = NULL;
+    CURLcode res;
+    char *URL = gateway;
+
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, URL);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
+    res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
+    return 0;
 }
