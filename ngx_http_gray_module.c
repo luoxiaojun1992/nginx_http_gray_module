@@ -2,13 +2,10 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-#include "/usr/local/include/hiredis/hiredis.h"
-
 ngx_uint_t isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
 static ngx_str_t new_variable_is_not_gray = ngx_string("is_not_gray");
-
 
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf);
@@ -26,14 +23,6 @@ static ngx_int_t ngx_http_gray_init(ngx_conf_t *cf);
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
-
-redisContext *redisConnectWithTimeout(const char *ip, int port, const struct timeval tv);
-
-void redisFree(redisContext *c);
-
-void *redisCommand(redisContext *c, const char *format, ...);
-
-void freeReplyObject(void *reply);
 
 char * getGrayPolicy();
 
@@ -174,28 +163,9 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 char * getGrayPolicy()
 {
-  redisContext *c;
-  redisReply *reply;
-  const char *hostname = "127.0.0.1";
-  int port = 6379;
-
-  struct timeval timeout = { 1, 500000 }; // 1.5 seconds
-  c = redisConnectWithTimeout(hostname, port, timeout);
-  if (c == NULL || c->err) {
-      if (c) {
-          redisFree(c);
-      }
-  }
-
-	char * grayPolicy = "";
-
-  /* Try a GET and two INCR */
-  reply = redisCommand(c,"GET foo");
-  grayPolicy = reply->str;
-  freeReplyObject(reply);
-
-  /* Disconnects and frees the context */
-  redisFree(c);
-
-  return grayPolicy;
+  REDIS redis = credis_connect(NULL, 0, 10000);
+  char *val;
+  credis_get(redis, "kalle", &val);
+  credis_close(redis);
+  return val;
 }
