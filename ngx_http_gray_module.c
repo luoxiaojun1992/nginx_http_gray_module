@@ -180,7 +180,7 @@ int callback(void *data, size_t size, size_t nmemb, void *stream)
     char *buffer = calloc(1, bufferSize);
 
     memcpy(buffer, data, size*nmemb);
-    sprintf(res, "%s", buffer)
+    sprintf(res, "%s", buffer);
     free(buffer);
 
     return size*nmemb;
