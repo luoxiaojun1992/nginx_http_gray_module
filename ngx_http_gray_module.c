@@ -181,6 +181,9 @@ int callback(void *data, size_t size, size_t nmemb, void *stream)
 
     memcpy(buffer, data, size*nmemb);
     sprintf(res, "%s", buffer);
+    if (res) {
+      //
+    }
     free(buffer);
 
     return size*nmemb;
@@ -188,7 +191,6 @@ int callback(void *data, size_t size, size_t nmemb, void *stream)
 
 int httpRequest(char *gateway)
 {
-    int ret = 0;
     CURL *curl = NULL;
     CURLcode res;
     char *URL = gateway;
