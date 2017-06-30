@@ -1,7 +1,7 @@
 /*
-	http-client-c 
+	http-client-c
 	Copyright (C) 2012-2013  Swen Kooij
-	
+
 	This file is part of http-client-c.
 
     http-client-c is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 	This library does not tend to work that stable nor does it fully implent the
 	standards described by IETF. For more information on the precise implentation of the
 	Hyper Text Transfer Protocol:
-	
+
 	http://www.ietf.org/rfc/rfc2616.txt
 */
 
@@ -83,10 +83,10 @@ char* str_cat(char *a, char *b)
 	return target;
 }
 
-/* 
+/*
 	Converts an integer value to its hex character
 */
-char to_hex(char code) 
+char to_hex(char code)
 {
 	static char hex[] = "0123456789abcdef";
 	return hex[code & 15];
@@ -95,16 +95,16 @@ char to_hex(char code)
 /*
 	URL encodes a string
 */
-char *urlencode(char *str) 
+char *urlencode(char *str)
 {
 	char *pstr = str, *buf = (char*)malloc(strlen(str) * 3 + 1), *pbuf = buf;
-  	while (*pstr) 
+  	while (*pstr)
 	{
-    	if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~') 
+    	if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~')
       		*pbuf++ = *pstr;
-    	else if (*pstr == ' ') 
+    	else if (*pstr == ' ')
       		*pbuf++ = '+';
-    	else 
+    	else
       		*pbuf++ = '%', *pbuf++ = to_hex(*pstr >> 4), *pbuf++ = to_hex(*pstr & 15);
     	pstr++;
   	}
@@ -149,18 +149,18 @@ char *str_replace(char *search , char *replace , char *subject)
 	for(p = strstr(subject , search) ; p != NULL ; p = strstr(p + search_size , search))
 	{
 		c++;
-	}	
+	}
 	c = ( strlen(replace) - search_size )*c + strlen(subject);
 	new_subject = (char*)malloc( c );
 	strcpy(new_subject , "");
-	old = subject;	
+	old = subject;
 	for(p = strstr(subject , search) ; p != NULL ; p = strstr(p + search_size , search))
 	{
 		strncpy(new_subject + strlen(new_subject) , old , p - old);
 		strcpy(new_subject + strlen(new_subject) , replace);
 		old = p + search_size;
 	}
-	strcpy(new_subject + strlen(new_subject) , old);	
+	strcpy(new_subject + strlen(new_subject) , old);
 	return new_subject;
 }
 
@@ -175,7 +175,7 @@ char* get_until(char *haystack, char *until)
 
 
 /* decodeblock - decode 4 '6-bit' characters into 3 8-bit binary bytes */
-void decodeblock(unsigned char in[], char *clrstr) 
+void decodeblock(unsigned char in[], char *clrstr)
 {
   	unsigned char out[4];
 	out[0] = in[0] << 2 | in[1] >> 4;
@@ -188,7 +188,7 @@ void decodeblock(unsigned char in[], char *clrstr)
 /*
 	Decodes a Base64 string
 */
-char* base64_decode(char *b64src) 
+char* base64_decode(char *b64src)
 {
 	char *clrdst = (char*)malloc( ((strlen(b64src) - 1) / 3 ) * 4 + 4 + 50);
 	char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -197,20 +197,20 @@ char* base64_decode(char *b64src)
 	char *p;
 	clrdst[0] = '\0';
 	phase = 0; i=0;
-	while(b64src[i]) 
+	while(b64src[i])
 	{
 		c = (int) b64src[i];
-		if(c == '=') 
+		if(c == '=')
 		{
-			decodeblock(in, clrdst); 
+			decodeblock(in, clrdst);
 			break;
 		}
 		p = strchr(b64, c);
-		if(p) 
+		if(p)
 		{
 			in[phase] = p - b64;
 			phase = (phase + 1) % 4;
-			if(phase == 0) 
+			if(phase == 0)
 			{
 				decodeblock(in, clrdst);
 				in[0]=in[1]=in[2]=in[3]=0;
@@ -223,7 +223,7 @@ char* base64_decode(char *b64src)
 }
 
 /* encodeblock - encode 3 8-bit binary bytes as 4 '6-bit' characters */
-void encodeblock( unsigned char in[], char b64str[], int len ) 
+void encodeblock( unsigned char in[], char b64str[], int len )
 {
 	char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     unsigned char out[5];
@@ -236,31 +236,30 @@ void encodeblock( unsigned char in[], char b64str[], int len )
     strncat((char *)b64str, (char *)out, sizeof(out));
 }
 
-/* 
+/*
 	Encodes a string with Base64
 */
-char* base64_encode(char *clrstr) 
+char* base64_encode(char *clrstr)
 {
 	char *b64dst = (char*)malloc(strlen(clrstr) + 50);
-	char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	unsigned char in[3];
 	int i, len = 0;
 	int j = 0;
 
 	b64dst[0] = '\0';
-	while(clrstr[j]) 
+	while(clrstr[j])
 	{
 		len = 0;
-		for(i=0; i<3; i++) 
+		for(i=0; i<3; i++)
 		{
 			in[i] = (unsigned char) clrstr[j];
-			if(clrstr[j]) 
+			if(clrstr[j])
 			{
 				len++; j++;
 			}
 			else in[i] = 0;
 		}
-		if( len ) 
+		if( len )
 		{
 			encodeblock( in, b64dst, len );
 		}
