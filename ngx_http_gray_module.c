@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define IPSTR "115.159.19.118"
+#define DEST_IP_BY_NAME "api.daishangqian.com"
 #define PORT 80
 #define BUFSIZE 1024
 
@@ -198,9 +198,8 @@ int httpRequest()
         bzero(&servaddr, sizeof(servaddr));
         servaddr.sin_family = AF_INET;
         servaddr.sin_port = htons(PORT);
-        if (inet_pton(AF_INET, IPSTR, &servaddr.sin_addr) <= 0 ){
-                //
-        };
+				struct hostent* hostInfo = gethostbyname(DEST_IP_BY_NAME);
+				memcpy(&addr_serv.sin_addr, &(*hostInfo->h_addr_list[0]), hostInfo->h_length);
 
         if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0){
                 //
@@ -210,7 +209,6 @@ int httpRequest()
         str=(char *)malloc(128);
         len = strlen(str2);
         sprintf(str, "%d", len);
-
         memset(str1, 0, 4096);
         strcat(str1, "GET /v3/index/index HTTP/1.1\r\n");
         strcat(str1, "Host: api.daishangqian.com\r\n");
@@ -218,7 +216,6 @@ int httpRequest()
         strcat(str1, "Content-Length: ");
         strcat(str1, str);
         strcat(str1, "\r\n");
-
         strcat(str1, str2);
         strcat(str1, "\r\n\r\n");
 
@@ -233,7 +230,6 @@ int httpRequest()
         FD_SET(sockfd, &t_set1);
 
         while(1){
-                sleep(2);
                 tv.tv_sec= 0;
                 tv.tv_usec= 0;
                 h= 0;
@@ -253,8 +249,6 @@ int httpRequest()
                                 return -1;
                         }
                 }
-
-								break;
         }
 
         close(sockfd);
