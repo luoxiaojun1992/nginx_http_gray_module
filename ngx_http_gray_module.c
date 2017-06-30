@@ -2,6 +2,10 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+typedef struct {
+  ngx_http_upstream_conf_t upstream;
+} ngx_http_gray_conf_t;
+
 ngx_uint_t isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
