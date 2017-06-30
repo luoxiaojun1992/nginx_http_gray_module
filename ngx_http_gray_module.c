@@ -157,7 +157,7 @@ static char *ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *ch
 static ngx_int_t gray_upstream_create_request(ngx_http_request_t *r)
 {
   //HTTP请求头
-  static ngx_str_t backendQueryLine = ngx_string("GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+  static ngx_str_t backendQueryLine = ngx_string("GET /test HTTP/1.1\r\nHost: www.daishangqian.com\r\nConnection: close\r\n\r\n");
 
   ngx_int_t queryLineLen = backendQueryLine.len;
 
@@ -384,7 +384,7 @@ ngx_http_gray_handler(ngx_http_request_t * r)
   }
 
   static struct sockaddr_in backendSockAddr;
-  struct hostent *pHost = gethostbyname((char*) "127.0.0.1");
+  struct hostent *pHost = gethostbyname((char*) "www.daishangqian.com");
   if (pHost == NULL) {
     ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "gethostbyname fail. %s", strerror(errno));
     return NGX_ERROR;
