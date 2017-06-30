@@ -333,7 +333,7 @@ static void gray_upstream_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 static ngx_int_t
 ngx_http_gray_upstream_input_filter(void *data, ssize_t bytes)
 {
-    ngx_http_enhanced_memcached_ctx_t  *ctx = data;
+    ngx_http_gray_ctx_t  *ctx = data;
 
     ngx_buf_t            *b;
     ngx_http_upstream_t  *u;
