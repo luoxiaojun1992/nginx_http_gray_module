@@ -138,10 +138,6 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-	char *result = "";
-
-	executeCMD("curl https://api.daishangqian.com/v3/index/index", result);
-
 	if (ngx_random() % 2 == 0) {
 		isGray = 1;
 	} else {
@@ -166,27 +162,4 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 	}
 
   return NGX_OK;
-}
-
-void executeCMD(const char *cmd, char *result)
-{
-    char buf_ps[1024];
-    char ps[1024]={0};
-    FILE *ptr;
-    strcpy(ps, cmd);
-    if((ptr=popen(ps, "r"))!=NULL)
-    {
-        while(fgets(buf_ps, 1024, ptr)!=NULL)
-        {
-           strcat(result, buf_ps);
-           if(strlen(result)>1024)
-               break;
-        }
-        pclose(ptr);
-        ptr = NULL;
-    }
-    else
-    {
-			
-    }
 }
