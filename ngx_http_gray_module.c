@@ -265,8 +265,44 @@ static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r)
     }
 
     if (rc == NGX_HTTP_PARSE_HEADER_DONE) {
-      //todo
+      if (r->upstream->headers_in.server == NULL) {
+        h = ngx_list_push(&r->upstream->headers_in.headers);
+
+        if (h == NULL) {
+          return NGX_ERROR;
+        }
+
+        h->hash = ngx_hash(ngx_hash(ngx_hash(ngx_hash(ngx_hash('s', 'e'), 'r'), 'v'), 'e'), 'r');
+
+        ngx_str_set(&h->key, "Server");
+
+        ngx_str_null(&h->value);
+
+        h->lowcase_key = (u_char *) "server";
+      }
+
+      if (r->upstream->headers_in.date == NULL) {
+        h = ngx_list_push(&r->upstream->headers_in.headers);
+        if (h == NULL) {
+          return NGX_ERROR;
+        }
+
+        h->hash = ngx_hash(ngx_hash(ngx_hash('d', 'a'), 't'), 'e');
+        ngx_str_set(&h->key, "Date");
+        ngx_str_null(&h->value);
+        h->lowcase_key = (u_char *) "date";
+      }
+
+      return NGX_OK;
     }
+
+    if (rc == NGX_AGAIN) {
+      return NGX_AGAIN;
+    }
+
+    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "upstream sent valid header");
+
+    return NGX_HTTP_UPSTREAM_INVALID_HEADER;
   }
 }
 
