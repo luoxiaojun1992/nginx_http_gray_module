@@ -2,10 +2,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-#include <curl/curl.h>
-#include <curl/easy.h>
-
-int isGray = 0;
+ngx_uint_t isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
 static ngx_str_t new_variable_is_not_gray = ngx_string("is_not_gray");
@@ -25,17 +22,6 @@ static ngx_int_t ngx_http_gray_init(ngx_conf_t *cf);
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
-
-CURL_EXTERN CURLcode curl_global_init(long flags);
-CURL_EXTERN CURL *curl_easy_init(void);
-CURL_EXTERN CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);
-CURL_EXTERN CURLcode curl_easy_perform(CURL *curl);
-CURL_EXTERN void curl_easy_cleanup(CURL *curl);
-CURL_EXTERN void curl_global_cleanup(void);
-
-int callback(void *data, size_t size, size_t nmemb, void *stream);
-
-int httpRequest(char *gateway);
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
@@ -145,9 +131,7 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-  httpRequest("http://127.0.0.1");
-
-	if (rand() % 2 == 0) {
+	if (ngx_random() % 2 == 0) {
 		isGray = 1;
 	} else {
 		isGray = 0;
@@ -179,39 +163,4 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 	}
 
   return NGX_OK;
-}
-
-int callback(void *data, size_t size, size_t nmemb, void *stream)
-{
-    char *res = "";
-    size_t bufferSize = nmemb*size + 8;
-    char *buffer = calloc(1, bufferSize);
-
-    memcpy(buffer, data, size*nmemb);
-    sprintf(res, "%s", buffer);
-    if (res) {
-      //
-    }
-    free(buffer);
-
-    return size*nmemb;
-}
-
-int httpRequest(char *gateway)
-{
-    CURL *curl = NULL;
-    CURLcode res;
-    char *URL = gateway;
-
-    curl_global_init(CURL_GLOBAL_ALL);
-    curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_URL, URL);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
-    res = curl_easy_perform(curl);
-    if (res) {
-      //
-    }
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
-    return 0;
 }
