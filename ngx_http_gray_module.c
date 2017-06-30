@@ -175,7 +175,7 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 int callback(void *data, size_t size, size_t nmemb, void *stream)
 {
-    char *res;
+    char *res = "";
     size_t bufferSize = nmemb*size + 8;
     char *buffer = calloc(1, bufferSize);
 
