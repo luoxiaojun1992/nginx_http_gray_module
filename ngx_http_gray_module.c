@@ -10,6 +10,7 @@ typedef struct {
 typedef struct {
   ngx_http_status_t  status;
   ngx_str_t           backendServer;
+  ngx_http_request_t        *request;
 } ngx_http_gray_ctx_t;
 
 ngx_uint_t isGray = 0;
