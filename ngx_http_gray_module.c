@@ -27,6 +27,8 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
+static void* ngx_http_gray_create_loc_conf(ngx_conf_t *cf);
+
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
 {
@@ -72,6 +74,30 @@ ngx_module_t  ngx_http_gray_module =
     NULL,                                  /* exit master */
     NGX_MODULE_V1_PADDING
 };
+
+static void* ngx_http_gray_create_loc_conf(ngx_conf_t *cf)
+{
+  ngx_http_gray_conf_t *mycf;
+  mycf = (ngx_http_gray_conf_t*)ngx_pcalloc(cf->pool, sizeof(ngx_http_gray_conf_t));
+  if (mycf == NULL) {
+    return NULL;
+  }
+
+  mycf->upstream.connect_timeout = 60000;
+  mycf->upstream.send_timeout = 60000;
+  mycf->upstream.read_timeout = 60000;
+  mycf->upstream.store_access = 0600;
+  mycf->upstream.buffering = 0;
+  mycf->upstream.bufs.num = 8;
+  mycf->upstream.bufs.size = ngx_pagesize;
+  mycf->upstream.buffer_size = ngx_pagesize;
+  mycf->upstream.busy_buffers_size = 2*ngx_pagesize;
+  mycf->upstream.temp_file_write_size = 2*ngx_pagesize;
+  mycf->upstream.max_temp_file_size = 1024 * 1024 * 1024;
+  mycf->upstream.hide_headers = NGX_CONF_UNSET_PTR;
+  mycf->upstream.pass_headers = NGX_CONF_UNSET_PTR;
+  return mycf;
+}
 
 /**
  * init gray模块
