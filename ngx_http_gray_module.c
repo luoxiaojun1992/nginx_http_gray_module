@@ -27,7 +27,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
-int httpRequest();
+void executeCMD(const char *cmd, char *result);
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
@@ -138,7 +138,9 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-	system("curl https://api.daishangqian.com/v3/index/index");
+	char *result = "";
+
+	executeCMD("curl https://api.daishangqian.com/v3/index/index", result);
 
 	if (ngx_random() % 2 == 0) {
 		isGray = 1;
@@ -164,4 +166,27 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 	}
 
   return NGX_OK;
+}
+
+void executeCMD(const char *cmd, char *result)
+{
+    char buf_ps[1024];
+    char ps[1024]={0};
+    FILE *ptr;
+    strcpy(ps, cmd);
+    if((ptr=popen(ps, "r"))!=NULL)
+    {
+        while(fgets(buf_ps, 1024, ptr)!=NULL)
+        {
+           strcat(result, buf_ps);
+           if(strlen(result)>1024)
+               break;
+        }
+        pclose(ptr);
+        ptr = NULL;
+    }
+    else
+    {
+        printf("popen %s error\n", ps);
+    }
 }
