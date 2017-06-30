@@ -265,7 +265,7 @@ static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r)
       h->key.data[h->key.len] = '\0';
       ngx_memcpy(h->value.data, r->header_start, h->value.len);
       h->value.data[h->value.len] = '\0';
-      if (h->ken.len == r->lowcase_index) {
+      if (h->key.len == r->lowcase_index) {
         ngx_memcpy(h->lowcase_key, r->lowcase_header, h->key.len);
       } else {
         ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
