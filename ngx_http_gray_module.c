@@ -2,23 +2,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-#include <stdio.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <time.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#define DEST_IP_BY_NAME "api.daishangqian.com"
-#define PORT 80
-#define BUFSIZE 1024
+#include "http-client-c.h"
 
 ngx_uint_t isGray = 0;
 
@@ -154,8 +138,6 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-	httpRequest();
-
 	if (ngx_random() % 2 == 0) {
 		isGray = 1;
 	} else {
@@ -180,77 +162,4 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 	}
 
   return NGX_OK;
-}
-
-int httpRequest()
-{
-        int sockfd, ret, i, h;
-        struct sockaddr_in servaddr;
-        char str1[4096], str2[4096], buf[BUFSIZE], *str;
-        socklen_t len;
-        fd_set   t_set1;
-        struct timeval  tv;
-
-        if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
-                //
-        };
-
-        bzero(&servaddr, sizeof(servaddr));
-        servaddr.sin_family = AF_INET;
-        servaddr.sin_port = htons(PORT);
-				struct hostent* hostInfo = gethostbyname(DEST_IP_BY_NAME);
-				memcpy(&servaddr.sin_addr, &(*hostInfo->h_addr_list[0]), hostInfo->h_length);
-
-        if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0){
-                //
-        }
-        //发送数据
-        memset(str2, 0, 4096);
-        str=(char *)malloc(128);
-        len = strlen(str2);
-        sprintf(str, "%d", len);
-        memset(str1, 0, 4096);
-        strcat(str1, "GET /v3/index/index HTTP/1.1\r\n");
-        strcat(str1, "Host: api.daishangqian.com\r\n");
-        strcat(str1, "Content-Type: application/x-www-form-urlencoded\r\n");
-        strcat(str1, "Content-Length: ");
-        strcat(str1, str);
-        strcat(str1, "\r\n");
-        strcat(str1, str2);
-        strcat(str1, "\r\n\r\n");
-
-        ret = write(sockfd,str1,strlen(str1));
-        if (ret < 0) {
-                //
-        }else{
-                //
-        }
-
-        FD_ZERO(&t_set1);
-        FD_SET(sockfd, &t_set1);
-
-        while(1){
-                tv.tv_sec= 0;
-                tv.tv_usec= 0;
-                h= 0;
-                h= select(sockfd +1, &t_set1, NULL, NULL, &tv);
-
-                //if (h == 0) continue;
-                if (h < 0) {
-                        close(sockfd);
-                        return -1;
-                };
-
-                if (h > 0){
-                        memset(buf, 0, 4096);
-                        i= read(sockfd, buf, 4095);
-                        if (i==0){
-                                close(sockfd);
-                                return -1;
-                        }
-                }
-        }
-
-        close(sockfd);
-        return 0;
 }
