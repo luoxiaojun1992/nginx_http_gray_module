@@ -25,6 +25,13 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
+CURL_EXTERN CURLcode curl_global_init(long flags);
+CURL_EXTERN CURL *curl_easy_init(void);
+CURL_EXTERN CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);
+CURL_EXTERN CURLcode curl_easy_perform(CURL *curl);
+CURL_EXTERN void curl_easy_cleanup(CURL *curl);
+CURL_EXTERN void curl_global_cleanup(void);
+
 int callback(void *data, size_t size, size_t nmemb, void *stream);
 
 int httpRequest(char *gateway);
