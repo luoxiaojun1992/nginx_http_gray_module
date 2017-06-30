@@ -187,6 +187,6 @@ void executeCMD(const char *cmd, char *result)
     }
     else
     {
-        printf("popen %s error\n", ps);
+			
     }
 }
