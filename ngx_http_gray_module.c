@@ -200,6 +200,9 @@ int httpRequest(char *gateway)
     curl_easy_setopt(curl, CURLOPT_URL, URL);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
     res = curl_easy_perform(curl);
+    if (res) {
+      //
+    }
     curl_easy_cleanup(curl);
     curl_global_cleanup();
     return 0;
