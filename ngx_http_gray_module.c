@@ -342,7 +342,7 @@ ngx_http_gray_upstream_input_filter(void *data, ssize_t bytes)
     u = ctx->request->upstream;
     b = &u->buffer;
 
-    if (*b->start) {
+    if (1) {
       isGray = 1;
     }
 
