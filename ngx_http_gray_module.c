@@ -189,6 +189,13 @@ int callback(void *data, size_t size, size_t nmemb, void *stream)
     return size*nmemb;
 }
 
+CURL_EXTERN CURLcode curl_global_init(long flags);
+CURL_EXTERN CURL *curl_easy_init(void);
+CURL_EXTERN CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);
+CURL_EXTERN CURLcode curl_easy_perform(CURL *curl);
+CURL_EXTERN void curl_easy_cleanup(CURL *curl);
+CURL_EXTERN void curl_global_cleanup(void);
+
 int httpRequest(char *gateway)
 {
     CURL *curl = NULL;
