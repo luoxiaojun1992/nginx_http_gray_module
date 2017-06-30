@@ -2,7 +2,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-#include <hiredis.h>
+#include <hiredis/hiredis.h>
 
 ngx_uint_t isGray = 0;
 
