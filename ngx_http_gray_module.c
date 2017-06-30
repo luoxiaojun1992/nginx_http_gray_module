@@ -2,23 +2,15 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-typedef struct {
-  ngx_http_upstream_conf_t upstream;
-} ngx_http_gray_conf_t;
-
-//请求上下文
-typedef struct {
-  ngx_http_status_t  status;
-  ngx_str_t           backendServer;
-  ngx_http_request_t        *request;
-} ngx_http_gray_ctx_t;
-
 ngx_uint_t isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
 static ngx_str_t new_variable_is_not_gray = ngx_string("is_not_gray");
 
-
+/*上下文*/
+typedef struct{
+    ngx_str_t stock[6];
+}ngx_http_gray_ctx_t;
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf);
 
@@ -35,36 +27,6 @@ static ngx_int_t ngx_http_gray_init(ngx_conf_t *cf);
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
-
-static void* ngx_http_gray_create_loc_conf(ngx_conf_t *cf);
-
-static char *ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
-
-static ngx_int_t gray_upstream_create_request(ngx_http_request_t *r);
-
-static ngx_int_t gray_process_status_line(ngx_http_request_t *r);
-
-static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r);
-
-static void gray_upstream_finalize_request(ngx_http_request_t *r, ngx_int_t rc);
-
-static ngx_int_t
-ngx_http_gray_upstream_input_filter(void *data, ssize_t bytes);
-
-
-static ngx_str_t  ngx_http_proxy_hide_headers[] =
-{
-    ngx_string("Date"),
-    ngx_string("Server"),
-    ngx_string("X-Pad"),
-    ngx_string("X-Accel-Expires"),
-    ngx_string("X-Accel-Redirect"),
-    ngx_string("X-Accel-Limit-Rate"),
-    ngx_string("X-Accel-Buffering"),
-    ngx_string("X-Accel-Charset"),
-    ngx_null_string
-};
-
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
@@ -91,8 +53,8 @@ static ngx_http_module_t ngx_http_gray_module_ctx=
     NULL,   /* init main configuration */
     NULL,   /* create server configuration */
     NULL,   /* merge server configuration */
-    ngx_http_gray_create_loc_conf,   /* create location configuration */
-    ngx_http_gray_merge_loc_conf    /* merge location configuration */
+    NULL,   /* create location configuration */
+    NULL    /* merge location configuration */
 };
 
 /*nginx 模块*/
@@ -112,241 +74,104 @@ ngx_module_t  ngx_http_gray_module =
     NGX_MODULE_V1_PADDING
 };
 
-
-
-
-static void* ngx_http_gray_create_loc_conf(ngx_conf_t *cf)
-{
-  ngx_http_gray_conf_t *mycf;
-  mycf = (ngx_http_gray_conf_t*)ngx_pcalloc(cf->pool, sizeof(ngx_http_gray_conf_t));
-  if (mycf == NULL) {
-    return NULL;
-  }
-
-  mycf->upstream.connect_timeout = 60000;
-  mycf->upstream.send_timeout = 60000;
-  mycf->upstream.read_timeout = 60000;
-  mycf->upstream.store_access = 0600;
-  mycf->upstream.buffering = 0;
-  mycf->upstream.bufs.num = 8;
-  mycf->upstream.bufs.size = ngx_pagesize;
-  mycf->upstream.buffer_size = ngx_pagesize;
-  mycf->upstream.busy_buffers_size = 2*ngx_pagesize;
-  mycf->upstream.temp_file_write_size = 2*ngx_pagesize;
-  mycf->upstream.max_temp_file_size = 1024 * 1024 * 1024;
-  mycf->upstream.hide_headers = NGX_CONF_UNSET_PTR;
-  mycf->upstream.pass_headers = NGX_CONF_UNSET_PTR;
-  return mycf;
-}
-
-static char *ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
-{
-  ngx_http_gray_conf_t *prev = (ngx_http_gray_conf_t *)parent;
-
-  ngx_http_gray_conf_t *conf = (ngx_http_gray_conf_t *)child;
-
-  ngx_hash_init_t          hash;
-
-  hash.max_size = 100;
-  hash.bucket_size = 1024;
-  hash.name = "proxy_headers_hash";
-
-  if (ngx_http_upstream_hide_headers_hash(cf, &conf->upstream, &prev->upstream, ngx_http_proxy_hide_headers, &hash) != NGX_OK) {
-    return NGX_CONF_ERROR;
-  }
-
-  return NGX_CONF_OK;
-}
-
-static ngx_int_t gray_upstream_create_request(ngx_http_request_t *r)
-{
-  //HTTP请求头
-  static ngx_str_t backendQueryLine = ngx_string("GET /test HTTP/1.1\r\nHost: www.daishangqian.com\r\nConnection: close\r\n\r\n");
-
-  ngx_int_t queryLineLen = backendQueryLine.len;
-
-  ngx_buf_t* b = ngx_create_temp_buf(r->pool, queryLineLen);
-
-  if (b == NULL) {
-    return NGX_ERROR;
-  }
-
-  b->last = b->pos + queryLineLen;
-
-  ngx_snprintf(b->pos, queryLineLen, (char *)backendQueryLine.data, &r->args);
-  r->upstream->request_bufs = ngx_alloc_chain_link(r->pool);
-  if (r->upstream->request_bufs == NULL) {
-    return NGX_ERROR;
-  }
-  r->upstream->request_bufs->buf = b;
-  r->upstream->request_bufs->next = NULL;
-  r->upstream->request_sent = 0;
-  r->upstream->header_sent = 0;
-  r->header_hash = 1;
-  return NGX_OK;
-}
-
-static ngx_int_t gray_process_status_line(ngx_http_request_t *r)
-{
-  size_t len;
-  ngx_int_t rc;
-  ngx_http_upstream_t *u;
-  ngx_http_gray_ctx_t* ctx = ngx_http_get_module_ctx(r, ngx_http_gray_module);
-
-  if (ctx == NULL) {
-    return NGX_ERROR;
-  }
-
-  u = r->upstream;
-
-  rc = ngx_http_parse_status_line(r, &u->buffer, &ctx->status);
-
-  if (rc == NGX_AGAIN) {
-    return rc;
-  }
-
-  if (rc == NGX_ERROR) {
-    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "upstream set not valid HTTP/1.0 header");
-    r->http_version = NGX_HTTP_VERSION_9;
-    u->state->status = NGX_HTTP_OK;
-    return NGX_OK;
-  }
-
-  if (u->state) {
-    u->state->status = ctx->status.code;
-  }
-
-  u->headers_in.status_n = ctx->status.code;
-
-  len = ctx->status.end - ctx->status.start;
-
-  u->headers_in.status_line.len = len;
-
-  u->headers_in.status_line.data = ngx_pnalloc(r->pool, len);
-
-  if (u->headers_in.status_line.data == NULL) {
-    return NGX_ERROR;
-  }
-
-  ngx_memcpy(u->headers_in.status_line.data, ctx->status.start, len);
-
-  u->process_header = gray_upstream_process_header;
-
-  return gray_upstream_process_header(r);
-}
-
-static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r)
-{
-  ngx_int_t rc;
-  ngx_table_elt_t *h;
-  ngx_http_upstream_header_t *hh;
-  ngx_http_upstream_main_conf_t *umcf;
-
-  umcf = ngx_http_get_module_main_conf(r, ngx_http_upstream_module);
-
-  for(;;) {
-    rc = ngx_http_parse_header_line(r, &r->upstream->buffer, 1);
-
-    if (rc == NGX_OK) {
-      h = ngx_list_push(&r->upstream->headers_in.headers);
-
-      if (h == NULL) {
-        return NGX_ERROR;
-      }
-
-      h->hash = r->header_hash;
-      h->key.len = r->header_name_end - r->header_name_start;
-      h->value.len = r->header_end - r->header_start;
-      h->key.data = ngx_pnalloc(r->pool, h->key.len + 1 + h->value.len + 1 + h->key.len);
-      if (h->key.data == NULL) {
-        return NGX_ERROR;
-      }
-
-      h->value.data = h->key.data + h->key.len + 1;
-      h->lowcase_key = h->key.data + h->key.len + 1 + h->value.len + 1;
-
-      ngx_memcpy(h->key.data, r->header_name_start, h->key.len);
-      h->key.data[h->key.len] = '\0';
-      ngx_memcpy(h->value.data, r->header_start, h->value.len);
-      h->value.data[h->value.len] = '\0';
-      if (h->key.len == r->lowcase_index) {
-        ngx_memcpy(h->lowcase_key, r->lowcase_header, h->key.len);
-      } else {
-        ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
-      }
-
-      hh = ngx_hash_find(&umcf->headers_in_hash, h->hash, h->lowcase_key, h->key.len);
-
-      if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
-        return NGX_ERROR;
-      }
-
-      continue;
-    }
-
-    if (rc == NGX_HTTP_PARSE_HEADER_DONE) {
-      if (r->upstream->headers_in.server == NULL) {
-        h = ngx_list_push(&r->upstream->headers_in.headers);
-
-        if (h == NULL) {
-          return NGX_ERROR;
-        }
-
-        h->hash = ngx_hash(ngx_hash(ngx_hash(ngx_hash(ngx_hash('s', 'e'), 'r'), 'v'), 'e'), 'r');
-
-        ngx_str_set(&h->key, "Server");
-
-        ngx_str_null(&h->value);
-
-        h->lowcase_key = (u_char *) "server";
-      }
-
-      if (r->upstream->headers_in.date == NULL) {
-        h = ngx_list_push(&r->upstream->headers_in.headers);
-        if (h == NULL) {
-          return NGX_ERROR;
-        }
-
-        h->hash = ngx_hash(ngx_hash(ngx_hash('d', 'a'), 't'), 'e');
-        ngx_str_set(&h->key, "Date");
-        ngx_str_null(&h->value);
-        h->lowcase_key = (u_char *) "date";
-      }
-
-      return NGX_OK;
-    }
-
-    if (rc == NGX_AGAIN) {
-      return NGX_AGAIN;
-    }
-
-    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "upstream sent valid header");
-
-    return NGX_HTTP_UPSTREAM_INVALID_HEADER;
-  }
-}
-
-static void gray_upstream_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
-{
-  ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0, "gray_upstream_finalize_request");
-}
-
+/*子请求结束时回调该方法*/
 static ngx_int_t
-ngx_http_gray_upstream_input_filter(void *data, ssize_t bytes)
+gray_subrequest_post_handler(ngx_http_request_t*r,void*data,ngx_int_t rc)
 {
-    ngx_http_gray_ctx_t  *ctx = data;
 
-    ngx_buf_t            *b;
-    ngx_http_upstream_t  *u;
+    /*当前请求是子请求*/
+    ngx_http_request_t          *pr = r->parent;
 
-    u = ctx->request->upstream;
-    b = &u->buffer;
+    /*取得上下文*/
+    ngx_http_gray_ctx_t* myctx = ngx_http_get_module_ctx(pr, ngx_http_gray_module);
 
-    if (b) {
-      //
+    pr->headers_out.status=r->headers_out.status;
+    /*访问服务器成功，开始解析包体*/
+    if(NGX_HTTP_OK == r->headers_out.status)
+    {
+        int flag = 0;
+
+        ngx_buf_t* pRecvBuf = &r->upstream->buffer;
+        /*内容解析到stock数组中*/
+        for (; pRecvBuf->pos != pRecvBuf->last; pRecvBuf->pos++)
+        {
+            if (*pRecvBuf->pos == ',' || *pRecvBuf->pos == '\"')
+            {
+                if (flag > 0)
+                {
+                    myctx->stock[flag - 1].len = pRecvBuf->pos - myctx->stock[flag - 1].data;
+                }
+                flag++;
+                myctx->stock[flag - 1].data = pRecvBuf->pos + 1;
+            }
+            if (flag > 6)
+                break;
+        }
+
     }
+    /*设置父请求的回调方法*/
+    pr->write_event_handler = gray_post_handler;
 
     return NGX_OK;
+
+}
+
+/*激活父请求回调*/
+static void
+gray_post_handler(ngx_http_request_t * r)
+{
+
+    /*如果没有返回200则直接把错误码发回用户*/
+    if (r->headers_out.status != NGX_HTTP_OK)
+    {
+    ngx_http_finalize_request(r, r->headers_out.status);
+        return;
+    }
+
+
+    /*当前请求是父请求*/
+    ngx_http_gray_ctx_t* myctx = ngx_http_get_module_ctx(r, ngx_http_gray_module);
+
+
+    /*发送给客户端的包体内容*/
+
+    ngx_str_t output_format = ngx_string("stock[%V],Today current price: %V, volumn: %V");
+
+    /*计算待发送包体的长度*/
+    /*-6减去占位符*/
+    int bodylen = output_format.len + myctx->stock[0].len
+                  + myctx->stock[1].len + myctx->stock[4].len - 6;
+
+    r->headers_out.content_length_n = bodylen;
+
+    /*内存池上分配内存保存将要发送的包体*/
+    ngx_buf_t* b = ngx_create_temp_buf(r->pool, bodylen);
+    ngx_snprintf(b->pos, bodylen, (char*)output_format.data,
+                 &myctx->stock[0], &myctx->stock[1], &myctx->stock[4]);
+
+
+    b->last = b->pos + bodylen;
+    b->last_buf = 1;
+
+    ngx_chain_t out;
+    out.buf = b;
+    out.next = NULL;
+
+    /*设置Content-Type，汉子编码是GBK*/
+    static ngx_str_t type = ngx_string("text/plain; charset=GBK");
+
+    r->headers_out.content_type = type;
+    r->headers_out.status = NGX_HTTP_OK;
+
+    r->connection->buffered |= NGX_HTTP_WRITE_BUFFERED;
+
+    /*发送http头部;包括响应行*/
+    ngx_int_t ret = ngx_http_send_header(r);
+    /*发送http包体*/
+    ret = ngx_http_output_filter(r, &out);
+
+    /*需要手动调用*/
+    ngx_http_finalize_request(r,ret);
 }
 
 /**
@@ -359,7 +184,6 @@ ngx_http_gray_init(ngx_conf_t *cf)
 {
     return NGX_OK;
 }
-
 
 /*配置项处理函数*/
 static char*
@@ -380,58 +204,64 @@ ngx_http_gray(ngx_conf_t *cf,ngx_command_t*cmd,void *conf)
 static ngx_int_t
 ngx_http_gray_handler(ngx_http_request_t * r)
 {
-  ngx_http_gray_ctx_t* myctx = ngx_http_get_module_ctx(r, ngx_http_gray_module);
-  if (myctx == NULL) {
-    myctx = ngx_palloc(r->pool, sizeof(ngx_http_gray_ctx_t));
-    if (myctx == NULL) {
-      return NGX_ERROR;
+  /*创建上下文*/
+    ngx_http_mytest_ctx_t* myctx = ngx_http_get_module_ctx(r, ngx_http_mytest_module);
+
+    if(NULL == myctx)
+    {
+        myctx = ngx_palloc(r->pool,sizeof(ngx_http_mytest_ctx_t));
+        if (myctx == NULL)
+        {
+            return NGX_ERROR;
+        }
+
+        /*将上下文设置到原始请求r中*/
+        ngx_http_set_ctx(r, myctx, ngx_http_mytest_module);
     }
-    ngx_http_set_ctx(r, myctx, ngx_http_gray_module);
-  }
 
-  if (ngx_http_upstream_create(r) != NGX_OK) {
-    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "ngx_http_upstream_create() failed");
-    return NGX_ERROR;
-  }
+    /*子请求的回调方法将在此结构体中设置*/
+    ngx_http_post_subrequest_t *psr=ngx_palloc(r->pool, sizeof(ngx_http_post_subrequest_t));
 
-  ngx_http_gray_conf_t *mycf = (ngx_http_gray_conf_t *) ngx_http_get_module_loc_conf(r, ngx_http_gray_module);
+    if (psr == NULL)
+    {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
 
-  ngx_http_upstream_t *u = r->upstream;
-  u->conf = &mycf->upstream;
-  u->buffering = mycf->upstream.buffering;
-  u->resolved = (ngx_http_upstream_resolved_t*) ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_resolved_t));
-  if (u->resolved == NULL) {
-    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "ngx_pcalloc resolved error. %s.", strerror(errno));
-    return NGX_ERROR;
-  }
+    /*设置子请求处理完毕时回调方法为mytest_subrequest_post_handler*/
+    psr->handler = mytest_subrequest_post_handler;
+    /*回调函数的data参数*/
+    psr->data = myctx;
 
-  static struct sockaddr_in backendSockAddr;
-  struct hostent *pHost = gethostbyname((char*) "www.daishangqian.com");
-  if (pHost == NULL) {
-    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "gethostbyname fail. %s", strerror(errno));
-    return NGX_ERROR;
-  }
 
-  backendSockAddr.sin_family = AF_INET;
-  backendSockAddr.sin_port = htons((in_port_t)80);
-  char* pDmsIP = inet_ntoa(*(struct in_addr*) (pHost->h_addr_list[0]));
-  backendSockAddr.sin_addr.s_addr = inet_addr(pDmsIP);
-  myctx->backendServer.data = (u_char*)pDmsIP;
-  myctx->backendServer.len = strlen(pDmsIP);
-  u->resolved->sockaddr = (struct sockaddr*)&backendSockAddr;
-  u->resolved->socklen = sizeof(struct sockaddr_in);
-  u->resolved->naddrs = 1;
-  u->resolved->port = htons((in_port_t)80);
+    /*构造子请求*/
+    /*sina服务器要求*/
+    ngx_str_t sub_prefix = ngx_string("/isgray");
 
-  u->create_request = gray_upstream_create_request;
-  u->process_header = gray_process_status_line;
-  u->finalize_request = gray_upstream_finalize_request;
-  u->input_filter = ngx_http_gray_upstream_input_filter;
+    /*URL构造=前缀+参数*/
+    ngx_str_t sub_location;
+    sub_location.len = sub_prefix.len + r->args.len;
+    sub_location.data = ngx_palloc(r->pool, sub_location.len);
+    ngx_snprintf(sub_location.data, sub_location.len,
+        "%V%V", &sub_prefix, &r->args);
 
-  r->main->count++;
-  ngx_http_upstream_init(r);
 
-  return NGX_DONE;
+    /*sr即为子请求*/
+    ngx_http_request_t *sr;
+    /*创建子请求*/
+    /*参数分别是：*/
+    //1.父请求 2.请求URI 3.子请求的URI参数 4.返回创建好的子请求
+    //5.子请求结束的回调
+    //6.subrequest_in_memory 标识
+    ngx_int_t rc = ngx_http_subrequest(r, &sub_location, NULL, &sr, psr, NGX_HTTP_SUBREQUEST_IN_MEMORY);
+
+    if (rc != NGX_OK)
+    {
+        return NGX_ERROR;
+    }
+
+    /*必须返回NGX_DONE*/
+    /*父请求不会被销毁，而是等待再次被激活*/
+    return NGX_DONE;
 }
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
