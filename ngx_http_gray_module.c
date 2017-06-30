@@ -367,9 +367,30 @@ ngx_http_gray_handler(ngx_http_request_t * r)
     return NGX_ERROR;
   }
 
-  //todo
+  static struct sockaddr_in backendSockAddr;
+  struct hosten *pHost = gethostbyname((char *) "127.0.0.1");
+  if (pHost == NULL) {
+    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "gethostbyname fail. %s", strerror(errno));
+    return NGX_ERROR;
+  }
 
-  return NGX_OK;
+  backendSockAddr.sin_family = AF_INET;
+  backendSockAddr.sin_port = htons((in_port_t) 80);
+  char* pDmsIP = inet_ntoa(*(struct in_addr*) (pHost->h_addr_list[0]));
+  backendSockAddr.sin_addr.s_addr = inet_addr(pDmsIP);
+  myctx->backendServer.data = (u_char*)pDmsIP;
+  myctx->backendServer.len = strlen(pDmsIP);
+  u->resolved->sockaddr = (struct sockaddr*)&backendSockAddr;
+  u->resolved->socklen = sizeof(struct sockaddr_in);
+  u->resolved->naddrs = 1;
+
+  u->create_request = gray_upstream_create_request;
+  u->process_header = gray_process_status_line;
+  u->finalize_request = gray_upstream_finalize_request;
+  r->main->count++;
+  ngx_http_upstream_init(r);
+
+  return NGX_DONE;
 }
 
 static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
