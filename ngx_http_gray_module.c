@@ -253,6 +253,8 @@ int httpRequest()
                                 return -1;
                         }
                 }
+
+								break;
         }
 
         close(sockfd);
