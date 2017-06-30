@@ -28,6 +28,9 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
+static ngx_int_t
+gray_subrequest_post_handler(ngx_http_request_t*r,void*data,ngx_int_t rc);
+
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
 {
@@ -82,21 +85,16 @@ gray_subrequest_post_handler(ngx_http_request_t*r,void*data,ngx_int_t rc)
     /*当前请求是子请求*/
     ngx_http_request_t          *pr = r->parent;
 
-    /*取得上下文*/
-    ngx_http_gray_ctx_t* myctx = ngx_http_get_module_ctx(pr, ngx_http_gray_module);
-
     pr->headers_out.status=r->headers_out.status;
     /*访问服务器成功，开始解析包体*/
     if(NGX_HTTP_OK == r->headers_out.status)
     {
-        int flag = 0;
-
         char *res = "";
         ngx_buf_t* pRecvBuf = &r->upstream->buffer;
         /*内容解析到stock数组中*/
         for (; pRecvBuf->pos != pRecvBuf->last; pRecvBuf->pos++)
         {
-          res += *pRecvBuf;
+          strcat(res, *pRecvBuf->pos);
         }
     }
 
