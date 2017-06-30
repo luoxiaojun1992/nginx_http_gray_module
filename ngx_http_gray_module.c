@@ -262,7 +262,7 @@ static ngx_int_t gray_upstream_process_header(ngx_http_request_t *r)
       h->lowcase_key = h->key.data + h->key.len + 1 + h->value.len + 1;
 
       ngx_memcpy(h->key.data, r->header_name_start, h->key.len);
-      h->key.data[h->ken.len] = '\0';
+      h->key.data[h->key.len] = '\0';
       ngx_memcpy(h->value.data, r->header_start, h->value.len);
       h->value.data[h->value.len] = '\0';
       if (h->ken.len == r->lowcase_index) {
@@ -384,7 +384,7 @@ ngx_http_gray_handler(ngx_http_request_t * r)
   }
 
   static struct sockaddr_in backendSockAddr;
-  struct hosten *pHost = gethostbyname((char *) "127.0.0.1");
+  struct hostent *pHost = gethostbyname((char*) "127.0.0.1");
   if (pHost == NULL) {
     ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "gethostbyname fail. %s", strerror(errno));
     return NGX_ERROR;
