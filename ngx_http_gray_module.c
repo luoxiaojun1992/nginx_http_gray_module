@@ -9,6 +9,7 @@ typedef struct {
 //请求上下文
 typedef struct {
   ngx_http_status_t  status;
+  ngx_str_t           backendServer;
 } ngx_http_gray_ctx_t;
 
 ngx_uint_t isGray = 0;
@@ -211,7 +212,7 @@ static ngx_int_t gray_process_status_line(ngx_http_request_t *r)
     u->state->status = ctx->status.code;
   }
 
-  u->headers_in.status.n = ctx->status.code;
+  u->headers_in.status_n = ctx->status.code;
 
   len = ctx->status.end - ctx->status.start;
 
