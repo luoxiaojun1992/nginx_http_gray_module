@@ -191,6 +191,12 @@ int getGrayPolicy()
   reply = redisCommand(c,"GET test_gray");
   int replyType;
   replyType = reply->type;
+  ngx_buf_t *buf;
+  buf->pos = (u_char*)reply->str;
+  buf->last = (u_char*)reply->str + reply->len;
+  if (buf) {
+    //
+  }
   freeReplyObject(reply);
 
   /* Disconnects and frees the context */
