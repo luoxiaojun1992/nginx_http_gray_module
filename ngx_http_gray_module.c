@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "hiredis/hiredis.h"
 
 ngx_uint_t isGray = 0;
 
@@ -139,10 +140,6 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-  REDIS redis = credis_connect("127.0.0.1", 6379, 10000);
-  char *val;
-  credis_get(redis, "test_gray", &val);
-  credis_close(redis);
   ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", val);
 
 	if (!strcmp(getGrayPolicy(), "true")) {
@@ -173,9 +170,31 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 char * getGrayPolicy()
 {
-  REDIS redis = credis_connect("127.0.0.1", 6379, 10000);
-  char *val;
-  credis_get(redis, "test_gray", &val);
-  credis_close(redis);
-  return val;
+  redisContext *c;
+  redisReply *reply;
+  const char *hostname = "127.0.0.1";
+  int port = 6379;
+
+  struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+  c = redisConnectWithTimeout(hostname, port, timeout);
+  if (c == NULL || c->err) {
+      if (c) {
+          printf("Connection error: %s\n", c->errstr);
+          redisFree(c);
+      } else {
+          printf("Connection error: can't allocate redis context\n");
+      }
+      exit(1);
+  }
+
+  /* Try a GET and two INCR */
+  reply = redisCommand(c,"GET test_gray");
+  char *result;
+  result = reply->str;
+  freeReplyObject(reply);
+
+  /* Disconnects and frees the context */
+  redisFree(c);
+
+  return reply;
 }
