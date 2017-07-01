@@ -194,8 +194,8 @@ int getGrayPolicy()
   ngx_buf_t *buf;
   buf->pos = (u_char*)reply->str;
   buf->last = (u_char*)reply->str + reply->len;
-  if (buf) {
-    //
+  for (;buf->pos <= buf->last; buf->pos++) {
+    printf("%c", *buf->pos);
   }
   freeReplyObject(reply);
 
