@@ -138,7 +138,11 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%d", strlen(getGrayPolicy()));
+  REDIS redis = credis_connect("127.0.0.1", 6379, 10000);
+  char *val;
+  credis_get(redis, "test_gray", &val);
+  credis_close(redis);
+  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", val);
 
 	if (!strcmp(getGrayPolicy(), "true")) {
 		isGray = 1;
