@@ -140,7 +140,7 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", val);
+  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", getGrayPolicy());
 
 	if (!strcmp(getGrayPolicy(), "true")) {
 		isGray = 1;
@@ -196,5 +196,5 @@ char * getGrayPolicy()
   /* Disconnects and frees the context */
   redisFree(c);
 
-  return reply;
+  return result;
 }
