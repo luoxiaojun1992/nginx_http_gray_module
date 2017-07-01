@@ -168,7 +168,7 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
   return NGX_OK;
 }
 
-u_char* getGrayPolicy()
+const char * getGrayPolicy()
 {
   redisContext *c;
   redisReply *reply;
@@ -189,8 +189,8 @@ u_char* getGrayPolicy()
 
   /* Try a GET and two INCR */
   reply = redisCommand(c,"GET test_gray");
-  u_char *result;
-  result = (u_char*)reply->str;
+  const char *result;
+  result = reply->str;
   freeReplyObject(reply);
 
   /* Disconnects and frees the context */
