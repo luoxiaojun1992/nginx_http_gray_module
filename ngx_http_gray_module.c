@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "credis.h"
 
 ngx_uint_t isGray = 0;
 
