@@ -29,7 +29,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
-u_char* getGrayPolicy();
+const char * getGrayPolicy();
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
