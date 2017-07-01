@@ -2,6 +2,8 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "credis.h"
 
