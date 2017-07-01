@@ -29,11 +29,6 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
-redisContext *redisConnectWithTimeout(const char *ip, int port, const struct timeval tv);
-void redisFree(redisContext *c);
-void *redisCommand(redisContext *c, const char *format, ...);
-void freeReplyObject(void *reply);
-
 char * getGrayPolicy();
 
 /*模块 commands*/
