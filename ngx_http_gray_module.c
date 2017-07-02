@@ -29,7 +29,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
-u_char* getGrayPolicy();
+char* getGrayPolicy();
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
@@ -140,9 +140,7 @@ static ngx_int_t ngx_http_gray_add_variable(ngx_conf_t *cf)
 
 static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data)
 {
-  u_char* c;
-  c = getGrayPolicy();
-  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%c", *c);
+  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", getGrayPolicy());
 
 	if (ngx_random() % 2 == 0) {
 		isGray = 1;
@@ -170,7 +168,7 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
   return NGX_OK;
 }
 
-u_char* getGrayPolicy()
+char* getGrayPolicy()
 {
   redisContext *c;
   redisReply *reply;
@@ -191,19 +189,13 @@ u_char* getGrayPolicy()
 
   /* Try a GET and two INCR */
   reply = redisCommand(c,"GET test_gray");
-  u_char* pos;
-  u_char* start;
-  u_char* end;
-  pos = (u_char*)reply->str;
-  start = (u_char*)reply->str;
-  end = (u_char*)reply->str + reply->len;
-  for (;pos <= end; pos++) {
-    printf("%c", *pos);
-  }
+  redisGetReply(c,&reply);
+  char *result;
+  result = reply->str;
   freeReplyObject(reply);
 
   /* Disconnects and frees the context */
   redisFree(c);
 
-  return start;
+  return result;
 }
