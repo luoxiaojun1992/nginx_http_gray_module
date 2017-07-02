@@ -192,6 +192,9 @@ char* getGrayPolicy(ngx_http_request_t *r)
 
   ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", reply->str);
 
+  ngx_table_elt_t *h;
+	ngx_list_part_t *part;
+	ngx_uint_t i;
   part = &r->headers_in.headers.part;
 	do {
 	  h = part->elts;
