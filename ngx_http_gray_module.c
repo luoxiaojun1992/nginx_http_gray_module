@@ -142,11 +142,11 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 {
   getGrayPolicy();
 
-	if (ngx_random() % 2 == 0) {
-		isGray = 1;
-	} else {
-		isGray = 0;
-	}
+	// if (ngx_random() % 2 == 0) {
+	// 	isGray = 1;
+	// } else {
+	// 	isGray = 0;
+	// }
 
 	if (isGray) {
   	*v = ngx_http_variable_true_value;
@@ -191,6 +191,12 @@ char* getGrayPolicy(ngx_http_request_t *r)
   reply = redisCommand(c,"GET test_gray");
 
   ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", reply->str);
+
+  if (!strcmp(reply->str, "true")) {
+    isGray = 1;
+  } else {
+    isGray = 0;
+  }
 
   char *result;
   result = reply->str;
