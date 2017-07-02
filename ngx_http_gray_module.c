@@ -189,8 +189,6 @@ u_char* getGrayPolicy()
 
   /* Try a GET and two INCR */
   reply = redisCommand(c,"GET test_gray");
-  int replyType;
-  replyType = reply->len;
   u_char* pos;
   u_char* start;
   u_char* end;
