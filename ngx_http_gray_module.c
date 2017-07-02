@@ -192,11 +192,20 @@ char* getGrayPolicy(ngx_http_request_t *r)
 
   ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", reply->str);
 
-  if (!strcmp(reply->str, "true")) {
-    isGray = 1;
-  } else {
-    isGray = 0;
-  }
+  part = &r->headers_in.headers.part;
+	do {
+	  h = part->elts;
+	  for (i = 0; i < part->nelts; i++) {
+			if ((h[i].key.len == 8) && (ngx_strcmp("X-App-Id", h[i].key.data) == 0)) {
+        if (!ngx_strcmp(reply->str, h[i].value.data)) {
+          isGray = 1;
+        } else {
+          isGray = 0;
+        }
+			}
+    }
+    part = part->next;
+  } while ( part != NULL );
 
   char *result;
   result = reply->str;
