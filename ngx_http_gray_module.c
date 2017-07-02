@@ -142,7 +142,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 {
   u_char* c;
   c = getGrayPolicy();
-  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%c", *c);
+  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%c", **c);
 
 	if (ngx_random() % 2 == 0) {
 		isGray = 1;
