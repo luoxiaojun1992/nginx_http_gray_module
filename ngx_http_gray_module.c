@@ -206,6 +206,8 @@ int getGrayPolicy(ngx_http_request_t *r)
             isGray = 1;
           }
           freeReplyObject(reply);
+        } else {
+          isGray = 1;
         }
 			}
 
@@ -225,6 +227,11 @@ int getGrayPolicy(ngx_http_request_t *r)
           freeReplyObject(reply);
         }
 			}
+
+      //Check If H5
+      if (!isApp) {
+        isGray = 1;
+      }
     }
     part = part->next;
   } while ( part != NULL );
