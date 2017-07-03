@@ -210,8 +210,10 @@ int getGrayPolicy(ngx_http_request_t *r)
 			}
 
       //Check App Version
+      int isApp = 0;
       if ((h[i].key.len == ngx_strlen("X-App-Id")) && (ngx_strcmp("X-App-Id", h[i].key.data) == 0)) {
         if (h[i].value.data) {
+          isApp = 1;
           reply = redisCommand(c, "GET test_gray_test_app_version");
           if (reply->str) {
             if (ngx_strstr(h[i].value.data, reply->str)) {
