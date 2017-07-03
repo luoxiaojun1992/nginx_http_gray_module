@@ -216,7 +216,7 @@ int getGrayPolicy(ngx_http_request_t *r)
         if (h[i].value.data) {
           reply = redisCommand(c, "GET test_gray_test_app_version");
           if (reply->str) {
-            if (ngx_strstr(reply->str, h[i].value.data)) {
+            if (ngx_strstr(h[i].value.data, reply->str)) {
               isGray = 1;
             }
           } else {
