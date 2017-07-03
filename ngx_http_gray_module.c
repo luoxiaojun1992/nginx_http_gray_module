@@ -29,7 +29,7 @@ static ngx_int_t ngx_http_isgray_variable(ngx_http_request_t *r, ngx_http_variab
 
 static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, ngx_uint_t data);
 
-char* getGrayPolicy();
+int getGrayPolicy(ngx_http_request_t *r);
 
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
@@ -168,7 +168,7 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
   return NGX_OK;
 }
 
-char* getGrayPolicy(ngx_http_request_t *r)
+int getGrayPolicy(ngx_http_request_t *r)
 {
   redisContext *c;
   redisReply *reply;
@@ -179,18 +179,17 @@ char* getGrayPolicy(ngx_http_request_t *r)
   c = redisConnectWithTimeout(hostname, port, timeout);
   if (c == NULL || c->err) {
       if (c) {
-          printf("Connection error: %s\n", c->errstr);
+          ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "Connection error: %s", c->errstr);
           redisFree(c);
       } else {
-          printf("Connection error: can't allocate redis context\n");
+          ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "Connection error: can't allocate redis context");
       }
-      exit(1);
+
+      isGray = 1;
+      return 1;
   }
 
-  /* Try a GET and two INCR */
-  reply = redisCommand(c,"GET test_gray");
-
-  ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s", reply->str);
+  isGray = 0;
 
   ngx_table_elt_t *h;
 	ngx_list_part_t *part;
@@ -199,23 +198,37 @@ char* getGrayPolicy(ngx_http_request_t *r)
 	do {
 	  h = part->elts;
 	  for (i = 0; i < part->nelts; i++) {
-			if ((h[i].key.len == 8) && (ngx_strcmp("X-App-Id", h[i].key.data) == 0)) {
-        if (!ngx_strcmp(reply->str, h[i].value.data)) {
-          isGray = 1;
-        } else {
-          isGray = 0;
+      //Check Token Policy
+      if ((h[i].key.len == ngx_strlen("X-TOKEN")) && (ngx_strcmp("X-TOKEN", h[i].key.data) == 0)) {
+        if (h[i].value.data) {
+          reply = redisCommand(c,"SISMEMBER test_gray_test_token");
+          if (reply->integer) {
+            isGray = 1;
+          }
+          freeReplyObject(reply);
+        }
+			}
+
+      //Check App Version
+      if ((h[i].key.len == ngx_strlen("X-App-Id")) && (ngx_strcmp("X-App-Id", h[i].key.data) == 0)) {
+        if (h[i].value.data) {
+          reply = redisCommand(c,"GET test_gray_test_app_version");
+          if (reply->str) {
+            if (ngx_strstr(reply->str, h[i].value.data)) {
+              isGray = 1;
+            }
+          } else {
+            isGray = 1;
+          }
+          freeReplyObject(reply);
         }
 			}
     }
     part = part->next;
   } while ( part != NULL );
 
-  char *result;
-  result = reply->str;
-  freeReplyObject(reply);
-
   /* Disconnects and frees the context */
   redisFree(c);
 
-  return result;
+  return 0;
 }
