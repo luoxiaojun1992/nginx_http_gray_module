@@ -202,7 +202,8 @@ int getGrayPolicy(ngx_http_request_t *r)
       if ((h[i].key.len == ngx_strlen("X-TOKEN")) && (ngx_strcmp("X-TOKEN", h[i].key.data) == 0)) {
         if (h[i].value.data) {
           char *s;
-          reply = redisCommand(c, sprintf(s, "SISMEMBER test_gray_test_token %s", h[i].value.data));
+          sprintf(s, "SISMEMBER test_gray_test_token %s", h[i].value.data)
+          reply = redisCommand(c, s);
           if (reply->integer) {
             isGray = 1;
           }
@@ -213,7 +214,7 @@ int getGrayPolicy(ngx_http_request_t *r)
       //Check App Version
       if ((h[i].key.len == ngx_strlen("X-App-Id")) && (ngx_strcmp("X-App-Id", h[i].key.data) == 0)) {
         if (h[i].value.data) {
-          reply = redisCommand(c,"GET test_gray_test_app_version");
+          reply = redisCommand(c, "GET test_gray_test_app_version");
           if (reply->str) {
             if (ngx_strstr(reply->str, h[i].value.data)) {
               isGray = 1;
