@@ -170,11 +170,12 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 int getGrayPolicy(ngx_http_request_t *r)
 {
+  isGray = 0;
+
   redisContext *c;
   redisReply *reply;
   const char *hostname = "127.0.0.1";
   int port = 6379;
-
   struct timeval timeout = { 1, 500000 }; // 1.5 seconds
   c = redisConnectWithTimeout(hostname, port, timeout);
   if (c == NULL || c->err) {
@@ -189,7 +190,19 @@ int getGrayPolicy(ngx_http_request_t *r)
       return 1;
   }
 
-  isGray = 0;
+  reply = redisCommand(c, "GET %s_switch", "test_gray_test");
+  if (reply->str) {
+    if (ngx_strcmp("on", reply->str)) {
+      freeReplyObject(reply);
+      isGray = 1;
+      return 1;
+    }
+  } else {
+    freeReplyObject(reply);
+    isGray = 1;
+    return 1;
+  }
+  freeReplyObject(reply);
 
   ngx_table_elt_t *h;
 	ngx_list_part_t *part;
@@ -203,11 +216,14 @@ int getGrayPolicy(ngx_http_request_t *r)
         if (h[i].value.data) {
           reply = redisCommand(c, "SISMEMBER %s_token %s", "test_gray_test", h[i].value.data);
           if (reply->integer) {
+            freeReplyObject(reply);
             isGray = 1;
+            return 1;
           }
           freeReplyObject(reply);
         } else {
           isGray = 1;
+          return 1;
         }
 			}
 
@@ -219,10 +235,14 @@ int getGrayPolicy(ngx_http_request_t *r)
           reply = redisCommand(c, "GET %s_app_version", "test_gray_test");
           if (reply->str) {
             if (ngx_strstr(h[i].value.data, reply->str)) {
+              freeReplyObject(reply);
               isGray = 1;
+              return 1;
             }
           } else {
+            freeReplyObject(reply);
             isGray = 1;
+            return 1;
           }
           freeReplyObject(reply);
         }
