@@ -190,6 +190,7 @@ int getGrayPolicy(ngx_http_request_t *r)
       return 1;
   }
 
+  //Check Gray Test Switch
   reply = redisCommand(c, "GET %s_switch", "test_gray_test");
   if (reply->str) {
     if (ngx_strcmp("on", reply->str)) {
