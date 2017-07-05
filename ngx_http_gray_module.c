@@ -66,8 +66,8 @@ static ngx_http_module_t ngx_http_gray_module_ctx=
     NULL,   /* init main configuration */
     NULL,   /* create server configuration */
     NULL,   /* merge server configuration */
-    NULL,   /* create location configuration */
-    NULL    /* merge location configuration */
+    ngx_http_gray_create_loc_conf,   /* create location configuration */
+    ngx_http_gray_merge_loc_conf    /* merge location configuration */
 };
 
 /*nginx 模块*/
@@ -180,7 +180,7 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 int getGrayPolicy(ngx_http_request_t *r)
 {
-  elcf = ngx_http_get_module_loc_conf(r, ngx_http_echo_module);
+  elcf = ngx_http_get_module_loc_conf(r, ngx_http_gray_module);
 
   isGray = 0;
 
