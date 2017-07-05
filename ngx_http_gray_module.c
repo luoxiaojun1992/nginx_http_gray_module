@@ -8,7 +8,7 @@
 #include "hiredis/hiredis.h"
 
 typedef struct {
-  ngx_str_t  redis_key
+  ngx_str_t  redis_key;
 } ngx_http_gray_loc_conf_t;
 
 ngx_uint_t isGray = 0;
@@ -180,6 +180,7 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 int getGrayPolicy(ngx_http_request_t *r)
 {
+  ngx_http_gray_loc_conf_t *elcf;
   elcf = ngx_http_get_module_loc_conf(r, ngx_http_gray_module);
 
   isGray = 0;
