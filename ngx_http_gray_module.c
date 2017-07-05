@@ -7,6 +7,10 @@
 #include <string.h>
 #include "hiredis/hiredis.h"
 
+typedef struct {
+  ngx_str_t  redis_key
+} ngx_http_gray_loc_conf_t;
+
 ngx_uint_t isGray = 0;
 
 static ngx_str_t new_variable_is_gray = ngx_string("is_gray");
@@ -31,13 +35,19 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 int getGrayPolicy(ngx_http_request_t *r);
 
+static void *
+ngx_http_gray_create_loc_conf(ngx_conf_t *cf);
+
+static char *
+ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
+
 /*模块 commands*/
 static ngx_command_t  ngx_http_gray_commands[] =
 {
 
     {
         ngx_string("gray"),
-        NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_NOARGS,
+        NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
         ngx_http_gray,
         NGX_HTTP_LOC_CONF_OFFSET,
         0,
@@ -170,6 +180,8 @@ static ngx_int_t ngx_http_isnotgray_variable(ngx_http_request_t *r, ngx_http_var
 
 int getGrayPolicy(ngx_http_request_t *r)
 {
+  elcf = ngx_http_get_module_loc_conf(r, ngx_http_echo_module);
+
   isGray = 0;
 
   redisContext *c;
@@ -186,22 +198,19 @@ int getGrayPolicy(ngx_http_request_t *r)
           ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "Connection error: can't allocate redis context");
       }
 
-      isGray = 1;
+      isGray = 0;
       return 1;
   }
 
   //Check Gray Test Switch
-  reply = redisCommand(c, "GET %s_switch", "test_gray_test");
+  reply = redisCommand(c, "GET %s_switch", elcf->redis_key.data);
   if (reply->str) {
     if (ngx_strcmp("on", reply->str)) {
       freeReplyObject(reply);
-      isGray = 1;
+      redisFree(c);
+      isGray = 0;
       return 1;
     }
-  } else {
-    freeReplyObject(reply);
-    isGray = 1;
-    return 1;
   }
   freeReplyObject(reply);
 
@@ -212,53 +221,53 @@ int getGrayPolicy(ngx_http_request_t *r)
 	do {
 	  h = part->elts;
 	  for (i = 0; i < part->nelts; i++) {
-      //Check Token Policy
-      if ((h[i].key.len == ngx_strlen("X-TOKEN")) && (ngx_strcmp("X-TOKEN", h[i].key.data) == 0)) {
-        if (h[i].value.data) {
-          reply = redisCommand(c, "SISMEMBER %s_token %s", "test_gray_test", h[i].value.data);
-          if (reply->integer) {
-            freeReplyObject(reply);
-            isGray = 1;
-            return 1;
-          }
-          freeReplyObject(reply);
-        } else {
-          isGray = 1;
-          return 1;
-        }
-			}
-
       //Check App Version
       int isApp = 0;
-      if ((h[i].key.len == ngx_strlen("X-App-Id")) && (ngx_strcmp("X-App-Id", h[i].key.data) == 0)) {
+      if ((h[i].key.len == ngx_strlen("X-API-ENV")) && (ngx_strcmp("X-API-ENV", h[i].key.data) == 0)) {
         if (h[i].value.data) {
           isApp = 1;
-          reply = redisCommand(c, "GET %s_app_version", "test_gray_test");
+          reply = redisCommand(c, "GET %s_gray_env", elcf->redis_key.data);
           if (reply->str) {
-            if (ngx_strstr(h[i].value.data, reply->str)) {
+            if (!ngx_strcmp(h[i].value.data, reply->str)) {
               freeReplyObject(reply);
+              redisFree(c);
               isGray = 1;
               return 1;
             }
-          } else {
-            freeReplyObject(reply);
-            isGray = 1;
-            return 1;
           }
           freeReplyObject(reply);
         }
 			}
-
-      //Check If H5
-      if (!isApp) {
-        isGray = 1;
-      }
     }
     part = part->next;
   } while ( part != NULL );
 
-  /* Disconnects and frees the context */
   redisFree(c);
 
   return 0;
+}
+
+static void *
+ngx_http_gray_create_loc_conf(ngx_conf_t *cf)
+{
+    ngx_http_gray_loc_conf_t  *conf;
+
+    conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_gray_loc_conf_t));
+    if (conf == NULL) {
+        return NGX_CONF_ERROR;
+    }
+    conf->redis_key.len = 0;
+    conf->redis_key.data = NULL;
+    return conf;
+}
+
+static char *
+ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
+{
+    ngx_http_gray_loc_conf_t *prev = parent;
+    ngx_http_gray_loc_conf_t *conf = child;
+
+    ngx_conf_merge_str_value(conf->redis_key, prev->redis_key, "test_gray_test");
+
+    return NGX_CONF_OK;
 }
