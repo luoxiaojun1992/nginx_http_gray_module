@@ -222,10 +222,8 @@ int getGrayPolicy(ngx_http_request_t *r)
 	  h = part->elts;
 	  for (i = 0; i < part->nelts; i++) {
       //Check App Version
-      int isApp = 0;
       if ((h[i].key.len == ngx_strlen("X-API-ENV")) && (ngx_strcmp("X-API-ENV", h[i].key.data) == 0)) {
         if (h[i].value.data) {
-          isApp = 1;
           reply = redisCommand(c, "GET %s_gray_env", elcf->redis_key.data);
           if (reply->str) {
             if (!ngx_strcmp(h[i].value.data, reply->str)) {
