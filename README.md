@@ -17,7 +17,7 @@ git clone git@github.com:luoxiaojun1992/nginx_http_gray_module.git
 ## Configuration
 + Edit nginx.conf
 ```
-gray test_redis_key
+gray test_redis_key 127.0.0.1 6379
 ```
 
 ## Usage
