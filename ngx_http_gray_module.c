@@ -8,7 +8,9 @@
 #include "hiredis/hiredis.h"
 
 typedef struct {
-  ngx_str_t  redis_key;
+  ngx_str_t    redis_key;
+  ngx_str_t    redis_host;
+  ngx_unint_t  redis_port;
 } ngx_http_gray_loc_conf_t;
 
 ngx_uint_t isGray = 0;
@@ -47,7 +49,7 @@ static ngx_command_t  ngx_http_gray_commands[] =
 
     {
         ngx_string("gray"),
-        NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
+        NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE3,
         ngx_http_gray,
         NGX_HTTP_LOC_CONF_OFFSET,
         0,
