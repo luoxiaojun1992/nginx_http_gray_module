@@ -194,7 +194,7 @@ int getGrayPolicy(ngx_http_request_t *r)
   redisContext *c;
   redisReply *reply;
   const char *hostname = elcf->redis_host.data;
-  int port = elcf->redis_port.data;
+  int port = elcf->redis_port;
   struct timeval timeout = { 1, 500000 }; // 1.5 seconds
   c = redisConnectWithTimeout(hostname, port, timeout);
   if (c == NULL || c->err) {
