@@ -14,7 +14,7 @@
 typedef struct {
   ngx_str_t    redis_key;
   ngx_str_t    redis_host;
-  ngx_unint_t  redis_port;
+  ngx_uint_t  redis_port;
 } ngx_http_gray_loc_conf_t;
 
 ngx_uint_t isGray = 0;
