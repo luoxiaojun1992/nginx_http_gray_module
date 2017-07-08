@@ -14,7 +14,7 @@
 typedef struct {
   ngx_str_t    redis_key;
   ngx_str_t    redis_host;
-  ngx_int_t   redis_port;
+  ngx_int_t    redis_port;
 } ngx_http_gray_loc_conf_t;
 
 ngx_uint_t isGray = 0;
@@ -193,10 +193,8 @@ int getGrayPolicy(ngx_http_request_t *r)
 
   redisContext *c;
   redisReply *reply;
-  char *hostname = DEFAULT_REDIS_HOST;
-  hostname = elcf->redis_host.data;
-  int port = DEFAULT_REDIS_PORT;
-  port = elcf->redis_port;
+  const char *hostname = DEFAULT_REDIS_HOST;
+  int port = elcf->redis_port;
   struct timeval timeout = { 1, 500000 }; // 1.5 seconds
   c = redisConnectWithTimeout(hostname, port, timeout);
   if (c == NULL || c->err) {
