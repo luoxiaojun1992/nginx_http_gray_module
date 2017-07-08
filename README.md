@@ -4,6 +4,8 @@
 + Nginx Virtual Host A/B Testing
 
 ## Dependencies
++ Nginx
++ Redis
 
 ## Installation
 + Clone project
