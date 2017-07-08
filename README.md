@@ -9,7 +9,10 @@
 git clone git@github.com:luoxiaojun1992/nginx_http_gray_module.git
 ```
 
-+ ./configure --add-module=YOUR_DIR/nginx_http_gray_module
++ Make nginx
+```
+./configure --add-module=YOUR_DIR/nginx_http_gray_module
+```
 
 ## Configuration
 + Edit nginx.conf
