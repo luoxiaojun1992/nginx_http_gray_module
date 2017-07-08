@@ -7,14 +7,14 @@
 #include <string.h>
 #include "hiredis/hiredis.h"
 
-#define DEFAULT_REDIS_KEY = "test_gray_test"
-#define DEFAULT_REDIS_HOST = "127.0.0.1"
-#define DEFAULT_REDIS_PORT = 6379
+#define DEFAULT_REDIS_KEY "test_gray_test"
+#define DEFAULT_REDIS_HOST "127.0.0.1"
+#define DEFAULT_REDIS_PORT 6379
 
 typedef struct {
   ngx_str_t    redis_key;
   ngx_str_t    redis_host;
-  ngx_uint_t  redis_port;
+  ngx_uint_t   redis_port;
 } ngx_http_gray_loc_conf_t;
 
 ngx_uint_t isGray = 0;
