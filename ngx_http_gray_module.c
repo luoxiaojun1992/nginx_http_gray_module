@@ -193,7 +193,7 @@ int getGrayPolicy(ngx_http_request_t *r)
 
   redisContext *c;
   redisReply *reply;
-  const char *hostname = DEFAULT_REDIS_HOST;
+  char *hostname = DEFAULT_REDIS_HOST;
   hostname = elcf->redis_host.data;
   int port = DEFAULT_REDIS_PORT;
   port = elcf->redis_port;
