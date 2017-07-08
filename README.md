@@ -34,12 +34,10 @@ set test_redis_key_gray_env beta
 
 + Edit Nginx configuration
 ```
-#If Need A/B Testing
 if ($is_gray) {
   ...
 }
 
-#If Not Need A/B Testing
 if ($is_not_gray) {
   ...
 }
