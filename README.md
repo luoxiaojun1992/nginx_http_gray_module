@@ -37,7 +37,6 @@ set test_redis_key_gray_env beta
 if ($is_gray) {
   ...
 }
-
 if ($is_not_gray) {
   ...
 }
