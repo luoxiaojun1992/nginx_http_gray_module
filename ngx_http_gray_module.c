@@ -7,6 +7,10 @@
 #include <string.h>
 #include "hiredis/hiredis.h"
 
+#define DEFAULT_REDIS_KEY = "test_gray_test"
+#define DEFAULT_REDIS_HOST = "127.0.0.1"
+#define DEFAULT_REDIS_PORT = 6379
+
 typedef struct {
   ngx_str_t    redis_key;
   ngx_str_t    redis_host;
@@ -189,8 +193,8 @@ int getGrayPolicy(ngx_http_request_t *r)
 
   redisContext *c;
   redisReply *reply;
-  const char *hostname = "127.0.0.1";
-  int port = 6379;
+  const char *hostname = elcf->redis_host.data;
+  int port = elcf->redis_port.data;
   struct timeval timeout = { 1, 500000 }; // 1.5 seconds
   c = redisConnectWithTimeout(hostname, port, timeout);
   if (c == NULL || c->err) {
@@ -257,8 +261,17 @@ ngx_http_gray_create_loc_conf(ngx_conf_t *cf)
     if (conf == NULL) {
         return NGX_CONF_ERROR;
     }
+
+    // ngx_str_null(&conf->redis_key);
+
     conf->redis_key.len = 0;
     conf->redis_key.data = NULL;
+
+    conf->redis_host.len = 0;
+    conf->redis_host.data = NULL;
+
+    conf->redis_port = NGX_CONF_UNSET;
+
     return conf;
 }
 
@@ -268,7 +281,10 @@ ngx_http_gray_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_gray_loc_conf_t *prev = parent;
     ngx_http_gray_loc_conf_t *conf = child;
 
-    ngx_conf_merge_str_value(conf->redis_key, prev->redis_key, "test_gray_test");
+    ngx_conf_merge_str_value(conf->redis_key, prev->redis_key, DEFAULT_REDIS_KEY);
+    ngx_conf_merge_str_value(conf->redis_host, prev->redis_host, DEFAULT_REDIS_HOST);
+
+    ngx_conf_merge_value(conf->redis_port, prev->redis_port, DEFAULT_REDIS_PORT);
 
     return NGX_CONF_OK;
 }
