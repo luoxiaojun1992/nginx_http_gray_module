@@ -11,13 +11,13 @@
 git clone git@github.com:luoxiaojun1992/nginx_http_gray_module.git
 ```
 
-+ Make nginx
++ Compile Nginx
 ```
 ./configure --add-module=YOUR_DIR/nginx_http_gray_module
 ```
 
 ## Configuration
-+ Edit nginx.conf
++ Edit Nginx configuration
 ```
 gray test_redis_key 127.0.0.1 6379
 ```
@@ -30,7 +30,7 @@ set test_redis_key_switch on
 set test_redis_key_gray_env beta
 ```
 
-+ Edit nginx.conf
++ Edit Nginx configuration
 ```
 #If Need A/B Testing
 if ($is_gray) {
